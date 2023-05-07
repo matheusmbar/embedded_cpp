@@ -35,7 +35,7 @@ void Reset_Handler(void) {
     }
 
     /* Initialize stdio related data */
-    struct _reent __ATTRIBUTE_IMPURE_DATA__ impure_data = _REENT_INIT (impure_data);
+    struct _reent impure_data = _REENT_INIT (impure_data);
     _impure_ptr = &impure_data;
 
     // set stdout buff size to 50 bytes

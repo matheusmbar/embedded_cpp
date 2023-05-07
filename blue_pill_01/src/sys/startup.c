@@ -58,14 +58,23 @@ void Default_IRQHandler (void) {
     return;
 }
 
+/* Set FreeRTOS interrupt handlers */
+extern void vPortSVCHandler (void);
+extern void xPortPendSVHandler (void);
+extern void xPortSysTickHandler (void);
+
+#define SVC_IRQHandler          vPortSVCHandler
+#define PendSV_IRQHandler       xPortPendSVHandler
+#define SysTick_IRQHandler      xPortSysTickHandler
+
 void __attribute__((weak)) NMI_Handler (void) { HardFault_Handler(); }
 void __attribute__((weak)) MemManageException (void) { HardFault_Handler(); }
 void __attribute__((weak)) BusFaultException (void) { HardFault_Handler(); }
 void __attribute__((weak)) UsageFaultException (void) { HardFault_Handler(); }
-void __attribute__((weak)) SVC_IRQHandler (void) { Default_IRQHandler(); }
+// void __attribute__((weak)) SVC_IRQHandler (void) { Default_IRQHandler(); }
 void __attribute__((weak)) DebugMonitor (void) { HardFault_Handler(); }
-void __attribute__((weak)) PendSV_IRQHandler (void) { Default_IRQHandler(); }
-void __attribute__((weak)) SysTick_IRQHandler (void) { Default_IRQHandler(); }
+// void __attribute__((weak)) PendSV_IRQHandler (void) { Default_IRQHandler(); }
+// void __attribute__((weak)) SysTick_IRQHandler (void) { Default_IRQHandler(); }
 void __attribute__((weak)) WWDG_IRQHandler (void) { Default_IRQHandler(); }
 void __attribute__((weak)) PVD_IRQHandler (void) { Default_IRQHandler(); }
 void __attribute__((weak)) TAMPER_IRQHandler (void) { Default_IRQHandler(); }

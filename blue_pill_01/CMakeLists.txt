@@ -28,8 +28,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_debug")
 ## Add libopencm3 to project
 include(cmake/libopencm3_stm32f103.cmake)
 
+## Add FreeRTOS to project
+include(cmake/freertos_kernel.cmake)
+
 ## Link application and libraries
-target_link_libraries(${PROJECT_NAME} PUBLIC libopencm3_stm32f103)
+target_link_libraries(${PROJECT_NAME} PUBLIC freertos_kernel libopencm3_stm32f103)
 
 ## Execute final steps
 print_section_sizes(${PROJECT_NAME})

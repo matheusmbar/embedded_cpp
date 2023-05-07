@@ -25,6 +25,12 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 ## Create debug setup
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_debug")
 
+## Add libopencm3 to project
+include(cmake/libopencm3_stm32f103.cmake)
+
+## Link application and libraries
+target_link_libraries(${PROJECT_NAME} PUBLIC libopencm3_stm32f103)
+
 ## Execute final steps
 print_section_sizes(${PROJECT_NAME})
 create_bin_output(${PROJECT_NAME})

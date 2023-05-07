@@ -54,11 +54,11 @@ set(CPU_CORE_FLAGS "-mcpu=cortex-m3 -mthumb -msoft-float ")
 
 set(OBJECT_GEN_FLAGS "${CPU_CORE_FLAGS} -ffunction-sections -fdata-sections --specs=nosys.specs --specs=nano.specs")
 
-#  -std=gnu99
-set(CMAKE_C_FLAGS   "${OBJECT_GEN_FLAGS} -std=gnu99" CACHE INTERNAL "C Compiler options")
+#  -std=c17
+set(CMAKE_C_FLAGS   "${OBJECT_GEN_FLAGS} -std=c17" CACHE INTERNAL "C Compiler options")
 
-# -std=c++11
-set(CMAKE_CXX_FLAGS "${OBJECT_GEN_FLAGS} -fno-exceptions -std=c++11" CACHE INTERNAL "C++ Compiler options")
+# -std=c++17
+set(CMAKE_CXX_FLAGS "${OBJECT_GEN_FLAGS} -fno-exceptions -std=c++17" CACHE INTERNAL "C++ Compiler options")
 
 # set Debug and Release compile options
 set(CMAKE_C_FLAGS_DEBUG      "-Og -g -ggdb3 -DDEBUG" CACHE INTERNAL "")

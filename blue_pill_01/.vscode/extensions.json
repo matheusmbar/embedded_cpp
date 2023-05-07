@@ -1,0 +1,14 @@
+{
+    // List of extensions which should be recommended for users of this workspace.
+    "recommendations": [
+        "dan-c-underwood.arm",
+        "ms-vscode.cpptools-extension-pack",
+        "twxs.cmake",
+        "marus25.cortex-debug",
+        "trond-snekvik.gnu-mapfiles",
+        "ZixuanWang.linkerscript",
+        "mcu-debug.memory-view"
+    ],
+    // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
+    "unwantedRecommendations": []
+}

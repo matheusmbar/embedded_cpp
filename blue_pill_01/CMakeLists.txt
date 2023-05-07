@@ -20,6 +20,9 @@ set(CMAKE_EXE_LINKER_FLAGS
     "${CMAKE_EXE_LINKER_FLAGS} -T${LINKER_SCRIPT}"
     CACHE INTERNAL "Linker options")
 
+## Export build parameters from CMake to use on VS Code c_cpp_properties.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON )
+
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 ## Create debug setup

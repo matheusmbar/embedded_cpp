@@ -15,6 +15,9 @@ jobs:
     - run: |
         arm-none-eabi-gcc --version
         which arm-none-eabi-gcc
+        tree /home/runner
+        tree /lib
+
 
     - name: Configure and build this project
       working-directory: ./blinky_embarcados

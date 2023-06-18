@@ -1,0 +1,17 @@
+name: C/C++ cross CI
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - uses: carlosperate/arm-none-eabi-gcc-action@v1
+    - run: arm-none-eabi-gcc --version
+    
+    - name: Configure and build this project
+      uses: threeal/cmake-action@latest
+
+     
+    

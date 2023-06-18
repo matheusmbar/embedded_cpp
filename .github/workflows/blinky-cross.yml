@@ -12,7 +12,9 @@ jobs:
     - uses: carlosperate/arm-none-eabi-gcc-action@v1
       with:
         release: '10.3-2021.10'
-    - run: arm-none-eabi-gcc --version
+    - run: |
+        arm-none-eabi-gcc --version
+        which arm-none-eabi-gcc
 
     - name: Configure and build this project
       working-directory: ./blinky_embarcados

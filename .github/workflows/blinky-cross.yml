@@ -15,11 +15,14 @@ jobs:
     - run: |
         arm-none-eabi-gcc --version
         which arm-none-eabi-gcc
-        dirname $(which arm-none-eabi-gcc)/..
+        TOOLCHAIN_PATH="$(dirname $(which arm-none-eabi-gcc))/.."
+        echo $TOOLCHAIN_PATH
 
 
     - name: Configure and build this project
       working-directory: ./blinky_embarcados
       run: |
-        cmake -B build . -DTOOLCHAIN_PATH=$(dirname $(which arm-none-eabi-gcc)/..)
+        TOOLCHAIN_PATH="$(dirname $(which arm-none-eabi-gcc))/.."
+        echo TOOLCHAIN_PATH=$TOOLCHAIN_PATH
+        cmake -B build -DTOOLCHAIN_PATH=$TOOLCHAIN_PATH .
         cmake --build build

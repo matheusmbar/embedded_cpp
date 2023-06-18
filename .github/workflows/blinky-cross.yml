@@ -5,15 +5,17 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-22.04
-    
+
     steps:
     - uses: actions/checkout@v3
-    
-    - uses: carlosperate/arm-none-eabi-gcc-action@v1
-    - run: arm-none-eabi-gcc --version
-    
-    - name: Configure and build this project
-      uses: threeal/cmake-action@latest
 
-     
-    
+    - uses: carlosperate/arm-none-eabi-gcc-action@v1
+      with:
+        release: '10.3-2021.10'
+    - run: arm-none-eabi-gcc --version
+
+    - name: Configure and build this project
+      working-directory: ./blinky_embarcados
+      run: |
+        cmake -B build .
+        cmake --build build

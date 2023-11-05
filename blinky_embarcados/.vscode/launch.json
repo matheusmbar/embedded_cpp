@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Cortex Debug",
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceRoot}/build/blinky_embarcados_debug.elf",
+            "gdbPath": "gdb-multiarch",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "bmp",
+            "BMPGDBSerialPort": "/dev/ttyACM0",
+            "device": "STM32F103",
+            "showDevDebugOutput": "vscode",
+            "svdFile": "${workspaceRoot}/cmake/STM32F103.svd"
+        }
+    ]
+}

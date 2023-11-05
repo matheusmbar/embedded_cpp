@@ -1,0 +1,29 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/cpp
+{
+    "name": "C++",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    // Features to add to the dev container. More info: https://containers.dev/features.
+    "features": {
+        "ghcr.io/devcontainers-contrib/features/gdbgui:2": {}
+    },
+    // Configure tool-specific properties.
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools-themes",
+                "ms-vscode.cpptools-extension-pack",
+                "dan-c-underwood.arm",
+                "ms-vscode.cpptools-extension-pack",
+                "twxs.cmake",
+                "marus25.cortex-debug",
+                "trond-snekvik.gnu-mapfiles",
+                "ZixuanWang.linkerscript",
+                "mcu-debug.memory-view",
+                "mcu-debug.rtos-views"
+            ]
+        }
+    }
+}

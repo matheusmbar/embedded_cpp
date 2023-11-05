@@ -37,8 +37,15 @@ include(cmake/libopencm3_stm32f103.cmake)
 ## Add FreeRTOS to project
 include(cmake/freertos_kernel.cmake)
 
+## Add tinycrypt to project
+include(cmake/tinycrypt.cmake)
+include_directories(${tinycrypt_SOURCE_DIR}/lib/include)
+
+## Add bootutil (from mcuboot) to project
+include(cmake/bootutil.cmake)
+
 ## Link application and libraries
-target_link_libraries(${PROJECT_NAME} PUBLIC freertos_kernel libopencm3_stm32f103)
+target_link_libraries(${PROJECT_NAME} PUBLIC freertos_kernel libopencm3_stm32f103 libtinycrypt bootutil)
 
 ## Execute final steps
 print_section_sizes(${PROJECT_NAME})

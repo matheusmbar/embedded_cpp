@@ -1,8 +1,10 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
+#include <bootutil/bootutil_public.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
+#include <tinycrypt/sha256.h>
 
 #include "test_cpp.h"
 
@@ -31,6 +33,13 @@ void task_blink (void* pvParameters) {
         ++count;
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
+}
+
+void task_confirm_boot (void* pvParameters) {
+    // Test Bootutil compilation
+    boot_set_confirmed_multi(0);
+
+    vTaskDelete(NULL);
 }
 
 int check_inits () {
@@ -74,6 +83,12 @@ int main (void) {
     if (auto ret = check_inits()) {
         return ret;
     }
+
+    // Test Tinycrypt compilation
+    TCSha256State_t sha256_state;
+    tc_sha256_init(sha256_state);
+
+    xTaskCreate(task_confirm_boot, "confirm_boot", configMINIMAL_STACK_SIZE, (void*) NULL, 2, NULL);
 
     xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, (void*) NULL, 1, NULL);
 

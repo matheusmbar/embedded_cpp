@@ -1,0 +1,18 @@
+diff --git a/config.mk b/config.mk
+index a5b9fb7..4434a98 100644
+--- a/config.mk
++++ b/config.mk
+@@ -7,10 +7,10 @@
+ ################################################################################
+ 
+ # EDIT HERE:
+-CC:=gcc
+-CFLAGS:=-Os -std=c99 -Wall -Wextra -D_ISOC99_SOURCE -MMD -I../lib/include/ -I../lib/source/ -I../tests/include/
++CC?=gcc
++CFLAGS?=$(CFLAGS_EXT) -Os -std=c99 -Wall -Wextra -D_ISOC99_SOURCE -MMD -I../lib/include/ -I../lib/source/ -I../tests/include/
+ vpath %.c ../lib/source/
+-ENABLE_TESTS=true
++ENABLE_TESTS?=true
+ 
+ # override MinGW built-in recipe
+ %.o: %.c

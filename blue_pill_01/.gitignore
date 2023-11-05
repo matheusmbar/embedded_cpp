@@ -31,5 +31,8 @@
 *.out
 *.app
 
-# Build folder
-build/
+# Build folders
+build*/
+
+# VS Code debug temp files
+.vscode/.cortex-debug.*.json

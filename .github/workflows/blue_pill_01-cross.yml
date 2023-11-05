@@ -1,0 +1,27 @@
+name: Blue_pill_01 - cross CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: carlosperate/arm-none-eabi-gcc-action@v1
+      with:
+        release: '12.2.Rel1'
+    - run: |
+        arm-none-eabi-gcc --version
+        which arm-none-eabi-gcc
+        TOOLCHAIN_PATH="$(dirname $(which arm-none-eabi-gcc))/.."
+        echo $TOOLCHAIN_PATH
+
+    - name: Configure and build this project
+      working-directory: ./blue_pill_01
+      run: |
+        TOOLCHAIN_PATH="$(dirname $(which arm-none-eabi-gcc))/.."
+        echo TOOLCHAIN_PATH=$TOOLCHAIN_PATH
+        cmake -B build -DTOOLCHAIN_PATH=$TOOLCHAIN_PATH .
+        cmake --build build

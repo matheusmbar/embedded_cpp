@@ -28,6 +28,9 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 ## Create debug setup
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_debug")
 
+## Uncomment to increase FetchContent verbose
+# set(FETCHCONTENT_QUIET FALSE)
+
 ## Add libopencm3 to project
 include(cmake/libopencm3_stm32f103.cmake)
 

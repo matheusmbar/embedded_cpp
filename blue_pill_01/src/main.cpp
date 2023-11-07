@@ -10,11 +10,11 @@
 #include "test_cpp.h"
 
 extern "C" {
-    #include "test_c.h"
+#include "test_c.h"
 
 int local_putchar(char ptr) {
-    usart_send_blocking(USART1, ptr);
-    return 0;
+  usart_send_blocking(USART1, ptr);
+  return 0;
 }
 }
 
@@ -24,51 +24,51 @@ constexpr auto led_pin = GPIO13;
 constexpr auto led_port = GPIOC;
 
 static void clock_setup(void) {
-    /* Select 72 MHz clock*/
-    rcc_clock_setup_pll(&rcc_hse_configs[RCC_CLOCK_HSE8_72MHZ]);
+  /* Select 72 MHz clock*/
+  rcc_clock_setup_pll(&rcc_hse_configs[RCC_CLOCK_HSE8_72MHZ]);
 
-    /* Enable clock for GPIO port C (for LED pin) */
-    rcc_periph_clock_enable(RCC_GPIOC);
+  /* Enable clock for GPIO port C (for LED pin) */
+  rcc_periph_clock_enable(RCC_GPIOC);
 
-    /* Enable clocks for GPIO port A (for GPIO_USART1_TX) and USART1. */
-    rcc_periph_clock_enable(RCC_GPIOA);
-    rcc_periph_clock_enable(RCC_AFIO);
-    rcc_periph_clock_enable(RCC_USART1);
+  /* Enable clocks for GPIO port A (for GPIO_USART1_TX) and USART1. */
+  rcc_periph_clock_enable(RCC_GPIOA);
+  rcc_periph_clock_enable(RCC_AFIO);
+  rcc_periph_clock_enable(RCC_USART1);
 }
 
 static void usart_setup(void) {
-    /* Setup GPIO pin GPIO_USART1_RE_TX on GPIO port A for transmit. */
-    gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO_USART1_TX);
+  /* Setup GPIO pin GPIO_USART1_RE_TX on GPIO port A for transmit. */
+  gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO_USART1_TX);
 
-    /* Setup UART parameters. */
-    usart_set_baudrate(USART1, 115200);
-    usart_set_databits(USART1, 8);
-    usart_set_stopbits(USART1, USART_STOPBITS_1);
-    usart_set_parity(USART1, USART_PARITY_NONE);
-    usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
-    usart_set_mode(USART1, USART_MODE_TX);
+  /* Setup UART parameters. */
+  usart_set_baudrate(USART1, 115200);
+  usart_set_databits(USART1, 8);
+  usart_set_stopbits(USART1, USART_STOPBITS_1);
+  usart_set_parity(USART1, USART_PARITY_NONE);
+  usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
+  usart_set_mode(USART1, USART_MODE_TX);
 
-    /* Finally enable the USART. */
-    usart_enable(USART1);
+  /* Finally enable the USART. */
+  usart_enable(USART1);
 }
 
 static void gpio_setup(void) {
-    /* Configure LED GPIO */
-    gpio_set_mode(led_port, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, led_pin);
+  /* Configure LED GPIO */
+  gpio_set_mode(led_port, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, led_pin);
 }
 
 void etl_log_error(const etl::exception& e) {
-    std::printf("ERROR %s\n", e.what());
+  std::printf("ERROR %s\n", e.what());
 }
 
-void task_blink (void* pvParameters) {
-    uint32_t count = 0;
+void task_blink(void* pvParameters) {
+  uint32_t count = 0;
 
-    for(;;) {
-        gpio_toggle(GPIOC, GPIO13);
-        ++count;
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
+  for (;;) {
+    gpio_toggle(GPIOC, GPIO13);
+    ++count;
+    vTaskDelay(pdMS_TO_TICKS(1000));
+  }
 }
 
 void task_array(void* pvParameters) {
@@ -93,63 +93,61 @@ void task_vector(void* pvParameters) {
   vTaskDelete(NULL);
 }
 
-int check_inits () {
-    int check_c;
-    int check_cpp;
+int check_inits() {
+  int check_c;
+  int check_cpp;
 
-    check_c = test_c();
-    if (check_c) {
-        std::printf("check_c failed [%d]\n", check_c);
-        return check_c;
-    }
-    else {
-        std::printf("check_c succeeded\n");
-    }
+  check_c = test_c();
+  if (check_c) {
+    std::printf("check_c failed [%d]\n", check_c);
+    return check_c;
+  } else {
+    std::printf("check_c succeeded\n");
+  }
 
-    if (1001 != test_cpp.getValue()) {
-        return 1001;
-    }
+  if (1001 != test_cpp.getValue()) {
+    return 1001;
+  }
 
-    check_cpp = test_cpp.checkGlobals();
-    if (check_cpp) {
-        std::printf("check_cpp failed [%d]\n", check_cpp);
-        return check_cpp;
-    }
-    else {
-        std::printf("check_cpp succeeded\n");
-    }
+  check_cpp = test_cpp.checkGlobals();
+  if (check_cpp) {
+    std::printf("check_cpp failed [%d]\n", check_cpp);
+    return check_cpp;
+  } else {
+    std::printf("check_cpp succeeded\n");
+  }
 
-    // printf calls _write() provided at syscalls.c
-    std::printf("end of checks \n");
+  // printf calls _write() provided at syscalls.c
+  std::printf("end of checks \n");
 
-    return 0;
+  return 0;
 }
 
-int main (void) {
-    int check_c;
-    int check_cpp;
+int main(void) {
+  int check_c;
+  int check_cpp;
 
-    clock_setup();
-    gpio_setup();
-    usart_setup();
+  clock_setup();
+  gpio_setup();
+  usart_setup();
 
-    std::printf("\nBOOTING\n");
-    std::printf("PERIPHERALS INITIALIZED\n\n");
+  std::printf("\nBOOTING\n");
+  std::printf("PERIPHERALS INITIALIZED\n\n");
 
-    etl::error_handler::set_callback<etl_log_error>();
+  etl::error_handler::set_callback<etl_log_error>();
 
-    if (auto ret = check_inits()) {
-        return ret;
-    }
+  if (auto ret = check_inits()) {
+    return ret;
+  }
 
-    xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, (void*) NULL, 1, NULL);
-    xTaskCreate(task_array, "array", configMINIMAL_STACK_SIZE, (void*)NULL, 2, NULL);
-    xTaskCreate(task_vector, "vector", configMINIMAL_STACK_SIZE, (void*)NULL, 3, NULL);
+  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, (void*)NULL, 1, NULL);
+  xTaskCreate(task_array, "array", configMINIMAL_STACK_SIZE, (void*)NULL, 2, NULL);
+  xTaskCreate(task_vector, "vector", configMINIMAL_STACK_SIZE, (void*)NULL, 3, NULL);
 
-    vTaskStartScheduler();
+  vTaskStartScheduler();
 
-    for (;;) {
-        // should not get here
-    }
-    return 0;
+  for (;;) {
+    // should not get here
+  }
+  return 0;
 }

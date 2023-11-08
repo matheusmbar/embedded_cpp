@@ -9,8 +9,7 @@ constexpr auto led_port = GPIOC;
 void rcc_gpio_setup(void) {
   rcc_clock_setup_pll(&rcc_hse_configs[RCC_CLOCK_HSE8_72MHZ]);
   rcc_periph_clock_enable(RCC_GPIOC);
-  gpio_set_mode(led_port, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL,
-                led_pin);
+  gpio_set_mode(led_port, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, led_pin);
 }
 
 void task_blink(void* pvParameters) {
@@ -26,8 +25,7 @@ void task_blink(void* pvParameters) {
 int main(void) {
   rcc_gpio_setup();
 
-  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, (void*)NULL, 1,
-              NULL);
+  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, (void*)NULL, 1, NULL);
 
   vTaskStartScheduler();
 

@@ -145,9 +145,9 @@ int main(void) {
 
   int v = MyMath::Sum(1, 2);
 
-  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, (void*)NULL, 1, NULL);
-  xTaskCreate(task_array, "array", configMINIMAL_STACK_SIZE, (void*)NULL, 2, NULL);
-  xTaskCreate(task_vector, "vector", configMINIMAL_STACK_SIZE, (void*)NULL, 3, NULL);
+  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, nullptr, 1, nullptr);
+  xTaskCreate(task_array, "array", configMINIMAL_STACK_SIZE, nullptr, 2, nullptr);
+  xTaskCreate(task_vector, "vector", configMINIMAL_STACK_SIZE, nullptr, 3, nullptr);
 
   vTaskStartScheduler();
 

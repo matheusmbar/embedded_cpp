@@ -1,9 +1,9 @@
-#ifndef INCLUDE_TEST_CPP_H_
-#define INCLUDE_TEST_CPP_H_
+#ifndef APP_INCLUDE_TEST_CPP_H_
+#define APP_INCLUDE_TEST_CPP_H_
 
 class Test_CPP {
  public:
-  Test_CPP(int value);
+  explicit Test_CPP(int value);
 
   int getValue();
   void setValue(int value);
@@ -14,4 +14,4 @@ class Test_CPP {
   int value_;
 };
 
-#endif
+#endif  // APP_INCLUDE_TEST_CPP_H_

@@ -12,8 +12,17 @@ Related materials:
 
 Setup:
 
+1. Install dependencies
+
 ```bash
-pip3 install  pre-commit --break-system-packages
+sudo apt install cpplint
+sudo apt install clang-format
+```
+
+2. Install and configure `pre-commit`
+
+```bash
+pip3 install pre-commit --break-system-packages
 
 pre-commit sample-config > .pre-commit-config.yaml
 

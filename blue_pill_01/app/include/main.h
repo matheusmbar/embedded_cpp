@@ -1,6 +1,6 @@
-#ifndef COMMON_MAIN_H
-#define COMMON_MAIN_H
+#ifndef APP_INCLUDE_MAIN_H_
+#define APP_INCLUDE_MAIN_H_
 
 int main(void);
 
-#endif  // COMMON_MAIN_H
+#endif  // APP_INCLUDE_MAIN_H_

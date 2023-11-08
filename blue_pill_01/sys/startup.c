@@ -51,8 +51,7 @@ void Reset_Handler(void) {
 }
 
 void HardFault_Handler(void) {
-  for (;;)
-    ;
+  for (;;) {}
 }
 
 void Default_IRQHandler(void) {

@@ -10,7 +10,7 @@ FetchContent_Declare( freertos_kernel
 
 # Set path to folder containing FreeRTOSConfig.h
 set( FREERTOS_CONFIG_FILE_DIRECTORY
-    "${CMAKE_SOURCE_DIR}/include" CACHE STRING "" FORCE)
+    "${CMAKE_SOURCE_DIR}/lib/include" CACHE STRING "" FORCE)
 # Select memory allocation implementation
 set( FREERTOS_HEAP "4" CACHE STRING "" FORCE)
 # Select the native compile PORT

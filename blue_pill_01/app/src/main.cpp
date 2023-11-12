@@ -7,6 +7,7 @@
 #include "etl/array.h"
 #include "etl/string.h"
 #include "etl/vector.h"
+#include "mymath.h"
 #include "test_cpp.h"
 
 extern "C" {
@@ -124,6 +125,8 @@ int check_inits() {
 }
 
 int main(void) {
+  static_assert(__cplusplus == 201703);
+
   int check_c;
   int check_cpp;
 
@@ -139,6 +142,8 @@ int main(void) {
   if (auto ret = check_inits()) {
     return ret;
   }
+
+  int v = MyMath::Sum(1, 2);
 
   xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, (void*)NULL, 1, NULL);
   xTaskCreate(task_array, "array", configMINIMAL_STACK_SIZE, (void*)NULL, 2, NULL);

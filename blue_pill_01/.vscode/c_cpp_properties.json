@@ -3,15 +3,22 @@
   "configurations": [
     {
       "name": "gcc-arm-none-eabi",
-      "includePath": [
-        "${workspaceFolder}/include"
-      ],
       "defines": [],
       "compileCommands": "${workspaceFolder}/build/compile_commands.json",
       "compilerPath": "/usr/bin/arm-none-eabi-g++",
       "cStandard": "c17",
       "cppStandard": "gnu++17",
       "intelliSenseMode": "linux-gcc-arm",
+      "configurationProvider": "ms-vscode.cmake-tools"
+    },
+    {
+      "name": "native",
+      "defines": [],
+      "compileCommands": "${workspaceFolder}/build_test/compile_commands.json",
+      "compilerPath": "/usr/bin/g++",
+      "cStandard": "c17",
+      "cppStandard": "gnu++17",
+      "intelliSenseMode": "linux-gcc-x64",
       "configurationProvider": "ms-vscode.cmake-tools"
     }
   ]

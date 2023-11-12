@@ -105,9 +105,13 @@ function(create_bin_output TARGET)
     add_custom_target("${TARGET}_binary" ALL DEPENDS ${TARGET}
                       COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${TARGET}> $<TARGET_FILE_BASE_NAME:${TARGET}>.bin)
 
+    SET(COPY_TO_PATH ${CMAKE_BINARY_DIR}/app-${CMAKE_BUILD_TYPE}.elf)
+    add_custom_target("${TARGET}_link" ALL DEPENDS ${TARGET}
+                      COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET}> ${COPY_TO_PATH}
+                      COMMENT "Copying 'app' ELF to '${COPY_TO_PATH}'")
     set_property(
         TARGET ${TARGET}
         APPEND
-        PROPERTY ADDITIONAL_CLEAN_FILES "$<TARGET_FILE_BASE_NAME:${TARGET}>.bin;$<TARGET_FILE:${TARGET}>.map"
+        PROPERTY ADDITIONAL_CLEAN_FILES "$<TARGET_FILE_BASE_NAME:${TARGET}>.bin;$<TARGET_FILE:${TARGET}>.map;${CMAKE_BINARY_DIR}/app-${CMAKE_BUILD_TYPE}.elf"
     )
 endfunction()

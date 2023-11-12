@@ -1,0 +1,20 @@
+name: Blue_pill_01 - tests CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Configure, build tests
+      working-directory: ./blue_pill_01
+      run: |
+        cmake -B build_test -DBUILD_LIB_TESTS=ON .
+        cmake --build build_test
+
+    - name: Run tests
+      working-directory: ./blue_pill_01/build_test
+      run: ctest --output-on-failure

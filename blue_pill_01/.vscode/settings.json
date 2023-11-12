@@ -1,4 +1,12 @@
 {
   "cmake.configureOnOpen": false,
-  "cmake.configureOnEdit": false
+  "cmake.configureOnEdit": false,
+  "cmake.configureArgs": [
+    "-DBUILD_LIB_TESTS=ON"
+  ],
+  "cmake.buildDirectory": "${workspaceFolder}/build_test",
+  "cmake.preferredGenerators": [
+    "Ninja",
+    "Unix Makefiles"
+  ],
 }

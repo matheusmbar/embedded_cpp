@@ -1,5 +1,5 @@
-#ifndef APP_INCLUDE_TEST_CPP_H_
-#define APP_INCLUDE_TEST_CPP_H_
+#ifndef APP_INCLUDE_TEST_CPP_HPP_
+#define APP_INCLUDE_TEST_CPP_HPP_
 
 class Test_CPP {
  public:
@@ -14,4 +14,4 @@ class Test_CPP {
   int value_;
 };
 
-#endif  // APP_INCLUDE_TEST_CPP_H_
+#endif  // APP_INCLUDE_TEST_CPP_HPP_

@@ -26,7 +26,9 @@ repos:
     hooks:
       - id: clang-format
 
-  - repo: https://gitlab.com/daverona/pre-commit/cpp
-    rev: 0.8.0                 # use the most recent version
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.3.5
     hooks:
-    - id: cpplint              # linter (or style-error checker) for Google C++ Style Guide
+      - id: cppcheck
+        exclude: sys\/.*.c
+      - id: cpplint

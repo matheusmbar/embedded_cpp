@@ -1,5 +1,5 @@
 
-#include "test_cpp.h"
+#include "test_cpp.hpp"
 
 int global_cpp = 333;
 int zero_cpp = 0;

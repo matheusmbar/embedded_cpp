@@ -33,8 +33,7 @@ int _lseek(int file, int ptr, int dir) {
 
 void _exit(int status) {
   __asm("BKPT #0");
-  while (1)
-    ;
+  while (1) {}
 }
 
 void _kill(int pid, int sig) {

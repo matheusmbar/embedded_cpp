@@ -1,8 +1,8 @@
-#include "test1.h"
+#include "test1.hpp"
 
 #include <gmock/gmock.h>
 
-#include "mymath.h"
+#include "mymath.hpp"
 
 TEST_F(Test1, checkSum) {
   EXPECT_EQ(4, MyMath::Sum(2, 2));

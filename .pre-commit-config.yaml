@@ -3,7 +3,7 @@
 
 # Don't run pre-commit on files under third-party/
 exclude: "^\
-  (third-party/.*)\
+  (blinky_embarcados/.*)\
   "
 
 repos:
@@ -25,3 +25,10 @@ repos:
     rev: v17.0.4
     hooks:
       - id: clang-format
+
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.3.5
+    hooks:
+      - id: cppcheck
+        exclude: sys\/.*.c
+      - id: cpplint

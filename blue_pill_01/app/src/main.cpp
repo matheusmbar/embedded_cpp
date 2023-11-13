@@ -7,8 +7,8 @@
 #include "etl/array.h"
 #include "etl/string.h"
 #include "etl/vector.h"
-#include "mymath.h"
-#include "test_cpp.h"
+#include "mymath.hpp"
+#include "test_cpp.hpp"
 
 extern "C" {
 #include "test_c.h"
@@ -127,9 +127,6 @@ int check_inits() {
 int main(void) {
   static_assert(__cplusplus == 201703);
 
-  int check_c;
-  int check_cpp;
-
   clock_setup();
   gpio_setup();
   usart_setup();
@@ -143,11 +140,9 @@ int main(void) {
     return ret;
   }
 
-  int v = MyMath::Sum(1, 2);
-
-  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, (void*)NULL, 1, NULL);
-  xTaskCreate(task_array, "array", configMINIMAL_STACK_SIZE, (void*)NULL, 2, NULL);
-  xTaskCreate(task_vector, "vector", configMINIMAL_STACK_SIZE, (void*)NULL, 3, NULL);
+  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, nullptr, 1, nullptr);
+  xTaskCreate(task_array, "array", configMINIMAL_STACK_SIZE, nullptr, 2, nullptr);
+  xTaskCreate(task_vector, "vector", configMINIMAL_STACK_SIZE, nullptr, 3, nullptr);
 
   vTaskStartScheduler();
 

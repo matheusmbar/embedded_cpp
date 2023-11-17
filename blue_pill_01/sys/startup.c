@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "main.h"
+#include "main.hpp"
 
 extern uint32_t _etext;
 extern uint32_t _sdata;

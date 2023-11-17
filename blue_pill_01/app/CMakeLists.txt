@@ -14,6 +14,7 @@ target_sources(${APP_NAME}
     "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/test_cpp.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/test_c.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/sys/io.c"
   )
 
 target_include_directories(${APP_NAME}

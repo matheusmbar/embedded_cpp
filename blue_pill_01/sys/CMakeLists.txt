@@ -5,7 +5,6 @@ add_library(Sys "")
 target_sources(Sys
   PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/startup.c
-    ${CMAKE_CURRENT_LIST_DIR}/syscalls.c
     ${CMAKE_CURRENT_LIST_DIR}/sysmem.c
   )
 

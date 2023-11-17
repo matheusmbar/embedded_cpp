@@ -95,32 +95,19 @@ void task_vector(void* pvParameters) {
 }
 
 int check_inits() {
-  int check_c;
-  int check_cpp;
-
-  check_c = test_c();
-  if (check_c) {
+  if (auto check_c = test_c(); check_c) {
     std::printf("check_c failed [%d]\n", check_c);
     return check_c;
-  } else {
-    std::printf("check_c succeeded\n");
   }
 
   if (1001 != test_cpp.getValue()) {
     return 1001;
   }
 
-  check_cpp = test_cpp.checkGlobals();
-  if (check_cpp) {
+  if (auto check_cpp = test_cpp.checkGlobals(); check_cpp) {
     std::printf("check_cpp failed [%d]\n", check_cpp);
     return check_cpp;
-  } else {
-    std::printf("check_cpp succeeded\n");
   }
-
-  // printf calls _write() provided at syscalls.c
-  std::printf("end of checks \n");
-
   return 0;
 }
 
@@ -136,13 +123,11 @@ int main(void) {
 
   etl::error_handler::set_callback<etl_log_error>();
 
-  if (auto ret = check_inits()) {
-    return ret;
-  }
+  assert(check_inits() == 0);
 
-  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, nullptr, 1, nullptr);
-  xTaskCreate(task_array, "array", configMINIMAL_STACK_SIZE, nullptr, 2, nullptr);
-  xTaskCreate(task_vector, "vector", configMINIMAL_STACK_SIZE, nullptr, 3, nullptr);
+  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, (void*)NULL, 1, NULL);
+  xTaskCreate(task_array, "array", configMINIMAL_STACK_SIZE, (void*)NULL, 2, NULL);
+  xTaskCreate(task_vector, "vector", configMINIMAL_STACK_SIZE, (void*)NULL, 3, NULL);
 
   vTaskStartScheduler();
 

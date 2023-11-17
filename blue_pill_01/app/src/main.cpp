@@ -75,11 +75,8 @@ void etl_log_error(const etl::exception& e) {
 }
 
 void task_blink(void* pvParameters) {
-  uint32_t count = 0;
-
   for (;;) {
     gpio_toggle(GPIOC, GPIO13);
-    ++count;
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }
@@ -142,6 +139,22 @@ int check_inits() {
   return 0;
 }
 
+void CliLed(EmbeddedCli* cli, char* args, void* /*context*/) {
+  embeddedCliPrint(cli, "LED");
+  if (embeddedCliFindToken(args, "on")) {
+    embeddedCliPrint(cli, "\ton");
+    gpio_clear(GPIOC, GPIO13);
+  } else if (embeddedCliFindToken(args, "off")) {
+    embeddedCliPrint(cli, "\toff");
+    gpio_set(GPIOC, GPIO13);
+  } else if (embeddedCliFindToken(args, "toggle")) {
+    embeddedCliPrint(cli, "\ttoggle");
+    gpio_toggle(GPIOC, GPIO13);
+  } else {
+    embeddedCliPrint(cli, "\tINVALID COMMAND");
+  }
+}
+
 int main(void) {
   static_assert(__cplusplus == 201703);
 
@@ -162,10 +175,11 @@ int main(void) {
 
   EmbeddedCli* cli = embeddedCliNew(config);
   cli->writeChar = writeChar;
+  embeddedCliAddBinding(cli, {"led", "Control LED", true, nullptr, CliLed});
 
   uart_semaphore = xSemaphoreCreateBinary();
 
-  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, nullptr, 1, nullptr);
+  // xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, nullptr, 1, nullptr);
   xTaskCreate(task_array, "array", configMINIMAL_STACK_SIZE, nullptr, 2, nullptr);
   xTaskCreate(task_vector, "vector", configMINIMAL_STACK_SIZE, nullptr, 3, nullptr);
   xTaskCreate(task_uart_rx, "uart_rx", configMINIMAL_STACK_SIZE, static_cast<void*>(cli), 1,

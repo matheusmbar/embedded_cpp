@@ -2,6 +2,7 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/usart.h>
+#include <semphr.h>
 #include <task.h>
 
 #include "etl/array.h"
@@ -9,6 +10,9 @@
 #include "etl/vector.h"
 #include "mymath.hpp"
 #include "test_cpp.hpp"
+
+#define EMBEDDED_CLI_IMPL
+#include "embedded_cli.h"
 
 extern "C" {
 #include "test_c.h"
@@ -19,10 +23,16 @@ int local_putchar(char ptr) {
 }
 }
 
+void writeChar(EmbeddedCli* /* embeddedCli */, char c) {
+  local_putchar(c);
+}
+
 Test_CPP test_cpp(1001);
 
 constexpr auto led_pin = GPIO13;
 constexpr auto led_port = GPIOC;
+
+xSemaphoreHandle uart_semaphore;
 
 static void clock_setup(void) {
   /* Select 72 MHz clock*/
@@ -40,6 +50,8 @@ static void clock_setup(void) {
 static void usart_setup(void) {
   /* Setup GPIO pin GPIO_USART1_RE_TX on GPIO port A for transmit. */
   gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO_USART1_TX);
+  /* Setup GPIO pin GPIO_USART1_RE_RX on GPIO port A for receive. */
+  gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO_USART1_RX);
 
   /* Setup UART parameters. */
   usart_set_baudrate(USART1, 115200);
@@ -47,7 +59,7 @@ static void usart_setup(void) {
   usart_set_stopbits(USART1, USART_STOPBITS_1);
   usart_set_parity(USART1, USART_PARITY_NONE);
   usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
-  usart_set_mode(USART1, USART_MODE_TX);
+  usart_set_mode(USART1, USART_MODE_TX_RX);
 
   /* Finally enable the USART. */
   usart_enable(USART1);
@@ -94,6 +106,25 @@ void task_vector(void* pvParameters) {
   vTaskDelete(NULL);
 }
 
+void task_uart_rx(void* pvParameters) {
+  auto cli = static_cast<EmbeddedCli*>(pvParameters);
+  uint16_t data;
+  for (;;) {
+    // TODO: replace this blocking call with receive from ISR
+    data = usart_recv_blocking(USART1);
+    embeddedCliReceiveChar(cli, static_cast<char>(data));
+    xSemaphoreGive(uart_semaphore);
+  }
+}
+
+void task_cli(void* pvParameters) {
+  auto cli = static_cast<EmbeddedCli*>(pvParameters);
+  for (;;) {
+    embeddedCliProcess(cli);
+    xSemaphoreTake(uart_semaphore, portMAX_DELAY);
+  }
+}
+
 int check_inits() {
   if (auto check_c = test_c(); check_c) {
     std::printf("check_c failed [%d]\n", check_c);
@@ -125,9 +156,21 @@ int main(void) {
 
   assert(check_inits() == 0);
 
-  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, (void*)NULL, 1, NULL);
-  xTaskCreate(task_array, "array", configMINIMAL_STACK_SIZE, (void*)NULL, 2, NULL);
-  xTaskCreate(task_vector, "vector", configMINIMAL_STACK_SIZE, (void*)NULL, 3, NULL);
+  auto config = embeddedCliDefaultConfig();
+  config->historyBufferSize = 32;
+  config->enableAutoComplete = false;
+
+  EmbeddedCli* cli = embeddedCliNew(config);
+  cli->writeChar = writeChar;
+
+  uart_semaphore = xSemaphoreCreateBinary();
+
+  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, nullptr, 1, nullptr);
+  xTaskCreate(task_array, "array", configMINIMAL_STACK_SIZE, nullptr, 2, nullptr);
+  xTaskCreate(task_vector, "vector", configMINIMAL_STACK_SIZE, nullptr, 3, nullptr);
+  xTaskCreate(task_uart_rx, "uart_rx", configMINIMAL_STACK_SIZE, static_cast<void*>(cli), 1,
+              nullptr);
+  xTaskCreate(task_cli, "task_cli", configMINIMAL_STACK_SIZE, static_cast<void*>(cli), 2, nullptr);
 
   vTaskStartScheduler();
 

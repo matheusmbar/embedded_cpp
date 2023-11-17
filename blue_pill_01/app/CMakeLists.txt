@@ -26,6 +26,8 @@ add_dependencies(${APP_NAME}
   Sys
   libopencm3_stm32f103
   freertos_kernel
+  etl::etl
+  EmbeddedCLI::EmbeddedCLI
   project_lib
   )
 
@@ -43,6 +45,7 @@ target_link_libraries(${APP_NAME}
   libopencm3_stm32f103
   freertos_kernel
   etl::etl
+  EmbeddedCLI::EmbeddedCLI
   project_lib
   )
 

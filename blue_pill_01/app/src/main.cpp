@@ -83,7 +83,7 @@ void task_blink(void* pvParameters) {
 
 void task_array(void* pvParameters) {
   const etl::string<11> msg{"Task array"};
-  std::printf("%s\n", msg.c_str());
+  std::printf("%s\r\n", msg.c_str());
   etl::array<uint8_t, 10> arr;
 
   for (uint8_t i = 0; i < arr.max_size(); i++) {
@@ -94,7 +94,7 @@ void task_array(void* pvParameters) {
 
 void task_vector(void* pvParameters) {
   const etl::string<11> msg{"Task vector"};
-  std::printf("%s\n", msg.c_str());
+  std::printf("%s\r\n", msg.c_str());
   etl::vector<uint8_t, 10> vec;
 
   for (uint8_t i = 0; i < vec.max_size(); i++) {
@@ -162,8 +162,8 @@ int main(void) {
   gpio_setup();
   usart_setup();
 
-  std::printf("\nBOOTING\n");
-  std::printf("PERIPHERALS INITIALIZED\n\n");
+  std::printf("\r\nBOOTING\r\n");
+  std::printf("PERIPHERALS INITIALIZED\r\n");
 
   etl::error_handler::set_callback<etl_log_error>();
 

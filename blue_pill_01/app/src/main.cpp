@@ -6,11 +6,9 @@
 #include <semphr.h>
 #include <task.h>
 
-#include "etl/array.h"
 #include "etl/string.h"
 #include "etl/to_arithmetic.h"
 #include "etl/to_string.h"
-#include "etl/vector.h"
 #include "led.hpp"
 #include "mymath.hpp"
 #include "test_cpp.hpp"
@@ -104,28 +102,6 @@ void task_blink(void* pvParameters) {
     }
     xQueueReceive(led_commands_queue, &cmd, ticks);
   }
-}
-
-void task_array(void* pvParameters) {
-  const etl::string<11> msg{"Task array"};
-  std::printf("%s\r\n", msg.c_str());
-  etl::array<uint8_t, 10> arr;
-
-  for (uint8_t i = 0; i < arr.max_size(); i++) {
-    arr.insert_at(i, i);
-  }
-  vTaskDelete(NULL);
-}
-
-void task_vector(void* pvParameters) {
-  const etl::string<11> msg{"Task vector"};
-  std::printf("%s\r\n", msg.c_str());
-  etl::vector<uint8_t, 10> vec;
-
-  for (uint8_t i = 0; i < vec.max_size(); i++) {
-    vec.push_back(i);
-  }
-  vTaskDelete(NULL);
 }
 
 void task_uart_rx(void* pvParameters) {
@@ -235,8 +211,6 @@ int main(void) {
 
   xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, static_cast<void*>(led_commands_queue),
               1, nullptr);
-  xTaskCreate(task_array, "array", configMINIMAL_STACK_SIZE, nullptr, 2, nullptr);
-  xTaskCreate(task_vector, "vector", configMINIMAL_STACK_SIZE, nullptr, 3, nullptr);
   xTaskCreate(task_uart_rx, "uart_rx", configMINIMAL_STACK_SIZE, static_cast<void*>(cli), 1,
               nullptr);
   xTaskCreate(task_cli, "task_cli", configMINIMAL_STACK_SIZE, static_cast<void*>(cli), 2, nullptr);

@@ -14,6 +14,7 @@ target_sources(${APP_NAME}
     "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/test_cpp.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/test_c.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/sys/io.c"
   )
 
 target_include_directories(${APP_NAME}
@@ -25,6 +26,8 @@ add_dependencies(${APP_NAME}
   Sys
   libopencm3_stm32f103
   freertos_kernel
+  etl::etl
+  EmbeddedCLI::EmbeddedCLI
   project_lib
   )
 
@@ -42,6 +45,7 @@ target_link_libraries(${APP_NAME}
   libopencm3_stm32f103
   freertos_kernel
   etl::etl
+  EmbeddedCLI::EmbeddedCLI
   project_lib
   )
 

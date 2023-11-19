@@ -31,4 +31,5 @@ repos:
     hooks:
       - id: cppcheck
         exclude: sys\/.*.c
+        exclude_types: [header]
       - id: cpplint

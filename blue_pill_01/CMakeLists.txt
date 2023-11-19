@@ -33,6 +33,9 @@ include(cmake/etlcpp.cmake)
 ## Add FreeRTOS to project
 include(cmake/freertos_kernel.cmake)
 
+## Add embedded-cli to project
+include(cmake/embedded-cli.cmake)
+
 option(BUILD_LIB_TESTS "Build tests" FALSE)
 
 add_subdirectory(lib)

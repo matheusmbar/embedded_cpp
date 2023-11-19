@@ -39,6 +39,9 @@
  * See http://www.freertos.org/a00110.html
  *----------------------------------------------------------*/
 
+extern void SetupStatsTimer(void);
+extern uint32_t GetStatsTimerCount(void);
+
 // clang-format off
 
 #define configUSE_PREEMPTION       1
@@ -61,7 +64,7 @@
 #define configCHECK_FOR_STACK_OVERFLOW      0
 #define configUSE_RECURSIVE_MUTEXES         1
 #define configQUEUE_REGISTRY_SIZE           0
-#define configGENERATE_RUN_TIME_STATS       0
+#define configGENERATE_RUN_TIME_STATS       1
 #define configRECORD_STACK_HIGH_ADDRESS     1
 
 /* Set the following definitions to 1 to include the API function, or zero
@@ -91,5 +94,10 @@ NVIC value of 255. */
 
 /* Provide support for newlib's context management. */
 // #define configUSE_NEWLIB_REENTRANT 1
+
+/* Setup runtime stats */
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()  SetupStatsTimer()/* Define this to initialize your timer/counter */
+#define portGET_RUN_TIME_COUNTER_VALUE()          GetStatsTimerCount()  /* Define this to sample the timer/counter */
+#define configUSE_STATS_FORMATTING_FUNCTIONS      1
 
 #endif  // LIB_INCLUDE_FREERTOSCONFIG_H_

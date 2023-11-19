@@ -1,4 +1,5 @@
 #include <FreeRTOS.h>
+#include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/usart.h>
@@ -35,6 +36,7 @@ constexpr auto led_pin = GPIO13;
 constexpr auto led_port = GPIOC;
 
 xSemaphoreHandle uart_semaphore;
+EmbeddedCli* cli_{nullptr};
 
 static void clock_setup(void) {
   /* Select 72 MHz clock*/
@@ -50,6 +52,9 @@ static void clock_setup(void) {
 }
 
 static void usart_setup(void) {
+  /* Enable the USART1 interrupt. */
+  nvic_enable_irq(NVIC_USART1_IRQ);
+
   /* Setup GPIO pin GPIO_USART1_RE_TX on GPIO port A for transmit. */
   gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO_USART1_TX);
   /* Setup GPIO pin GPIO_USART1_RE_RX on GPIO port A for receive. */
@@ -63,8 +68,28 @@ static void usart_setup(void) {
   usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
   usart_set_mode(USART1, USART_MODE_TX_RX);
 
+  /* Enable USART1 Receive interrupt. */
+  USART_CR1(USART1) |= USART_CR1_RXNEIE;
+
   /* Finally enable the USART. */
   usart_enable(USART1);
+}
+
+extern "C" {
+void USART1_IRQHandler(void) {
+  /* Check if we were called because of RXNE. */
+  if (((USART_CR1(USART1) & USART_CR1_RXNEIE) != 0) && ((USART_SR(USART1) & USART_SR_RXNE) != 0)) {
+    uint16_t data = usart_recv(USART1);
+    if (cli_) {
+      embeddedCliReceiveChar(cli_, static_cast<char>(data));
+      BaseType_t task_woken{pdFALSE};
+      xSemaphoreGiveFromISR(uart_semaphore, &task_woken);
+      if (task_woken) {
+        portYIELD()
+      }
+    }
+  }
+}
 }
 
 static void gpio_setup(void) {
@@ -101,17 +126,6 @@ void task_blink(void* pvParameters) {
         break;
     }
     xQueueReceive(led_commands_queue, &cmd, ticks);
-  }
-}
-
-void task_uart_rx(void* pvParameters) {
-  auto cli = static_cast<EmbeddedCli*>(pvParameters);
-  for (;;) {
-    uint16_t data;
-    // TODO(matheusmbar): replace this blocking call with receive from ISR
-    data = usart_recv_blocking(USART1);
-    embeddedCliReceiveChar(cli, static_cast<char>(data));
-    xSemaphoreGive(uart_semaphore);
   }
 }
 
@@ -202,18 +216,16 @@ int main(void) {
   config->historyBufferSize = 32;
   config->enableAutoComplete = false;
 
-  EmbeddedCli* cli = embeddedCliNew(config);
-  cli->writeChar = writeChar;
+  cli_ = embeddedCliNew(config);
+  cli_->writeChar = writeChar;
   embeddedCliAddBinding(
-      cli, {"led", "Control LED", true, static_cast<void*>(led_commands_queue), CliLed});
+      cli_, {"led", "Control LED", true, static_cast<void*>(led_commands_queue), CliLed});
 
   uart_semaphore = xSemaphoreCreateBinary();
 
   xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, static_cast<void*>(led_commands_queue),
               1, nullptr);
-  xTaskCreate(task_uart_rx, "uart_rx", configMINIMAL_STACK_SIZE, static_cast<void*>(cli), 1,
-              nullptr);
-  xTaskCreate(task_cli, "task_cli", configMINIMAL_STACK_SIZE, static_cast<void*>(cli), 2, nullptr);
+  xTaskCreate(task_cli, "task_cli", configMINIMAL_STACK_SIZE, static_cast<void*>(cli_), 2, nullptr);
 
   vTaskStartScheduler();
 

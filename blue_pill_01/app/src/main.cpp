@@ -2,11 +2,14 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/usart.h>
+#include <queue.h>
 #include <semphr.h>
 #include <task.h>
 
 #include "etl/array.h"
 #include "etl/string.h"
+#include "etl/to_arithmetic.h"
+#include "etl/to_string.h"
 #include "etl/vector.h"
 #include "mymath.hpp"
 #include "test_cpp.hpp"
@@ -33,6 +36,15 @@ constexpr auto led_pin = GPIO13;
 constexpr auto led_port = GPIOC;
 
 xSemaphoreHandle uart_semaphore;
+
+/* Led module implementation */
+enum class LedMode { kOn, kOff, kBlink, kToggle };
+struct LedCommand {
+  LedMode mode{LedMode::kOff};
+  uint32_t period_ms{1000};
+};
+
+/* Led module implementation */
 
 static void clock_setup(void) {
   /* Select 72 MHz clock*/
@@ -75,9 +87,30 @@ void etl_log_error(const etl::exception& e) {
 }
 
 void task_blink(void* pvParameters) {
+  auto led_commands_queue = static_cast<QueueHandle_t>(pvParameters);
+
+  LedCommand cmd{LedMode::kOff, 0};
+  auto ticks = portMAX_DELAY;
   for (;;) {
-    gpio_toggle(GPIOC, GPIO13);
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    switch (cmd.mode) {
+      case LedMode::kOff:
+        gpio_set(GPIOC, GPIO13);
+        ticks = portMAX_DELAY;
+        break;
+      case LedMode::kOn:
+        gpio_clear(GPIOC, GPIO13);
+        ticks = portMAX_DELAY;
+        break;
+      case LedMode::kToggle:
+        gpio_toggle(GPIOC, GPIO13);
+        ticks = portMAX_DELAY;
+        break;
+      case LedMode::kBlink:
+        gpio_toggle(GPIOC, GPIO13);
+        ticks = pdMS_TO_TICKS(cmd.period_ms / 2);
+        break;
+    }
+    xQueueReceive(led_commands_queue, &cmd, ticks);
   }
 }
 
@@ -105,9 +138,9 @@ void task_vector(void* pvParameters) {
 
 void task_uart_rx(void* pvParameters) {
   auto cli = static_cast<EmbeddedCli*>(pvParameters);
-  uint16_t data;
   for (;;) {
-    // TODO: replace this blocking call with receive from ISR
+    uint16_t data;
+    // TODO(matheusmbar): replace this blocking call with receive from ISR
     data = usart_recv_blocking(USART1);
     embeddedCliReceiveChar(cli, static_cast<char>(data));
     xSemaphoreGive(uart_semaphore);
@@ -139,20 +172,46 @@ int check_inits() {
   return 0;
 }
 
-void CliLed(EmbeddedCli* cli, char* args, void* /*context*/) {
+void CliLed(EmbeddedCli* cli, char* args, void* context) {
+  auto led_commands_queue = static_cast<QueueHandle_t>(context);
+  LedCommand led_cmd;
   embeddedCliPrint(cli, "LED");
-  if (embeddedCliFindToken(args, "on")) {
-    embeddedCliPrint(cli, "\ton");
-    gpio_clear(GPIOC, GPIO13);
-  } else if (embeddedCliFindToken(args, "off")) {
-    embeddedCliPrint(cli, "\toff");
-    gpio_set(GPIOC, GPIO13);
-  } else if (embeddedCliFindToken(args, "toggle")) {
-    embeddedCliPrint(cli, "\ttoggle");
-    gpio_toggle(GPIOC, GPIO13);
-  } else {
-    embeddedCliPrint(cli, "\tINVALID COMMAND");
+  const char* arg_1 = embeddedCliGetToken(args, 1);
+  if (arg_1 == nullptr) {
+    embeddedCliPrint(cli, "\tMissing command");
+    return;
   }
+
+  const etl::string<7> arg_cmd{arg_1};
+  if (arg_cmd.compare("on") == 0) {
+    embeddedCliPrint(cli, "\ton");
+    led_cmd.mode = LedMode::kOn;
+  } else if (arg_cmd.compare("off") == 0) {
+    embeddedCliPrint(cli, "\toff");
+    led_cmd.mode = LedMode::kOff;
+  } else if (arg_cmd.compare("toggle") == 0) {
+    embeddedCliPrint(cli, "\ttoggle");
+    led_cmd.mode = LedMode::kToggle;
+  } else if (arg_cmd.compare("blink") == 0) {
+    embeddedCliPrint(cli, "\tblink");
+    const char* arg_period = embeddedCliGetToken(args, 2);
+    if (arg_period == nullptr) {
+      embeddedCliPrint(cli, "\tMissing blink period");
+      return;
+    }
+    etl::string<6> period{arg_period};
+    if (auto result = etl::to_arithmetic<uint32_t>(period); result) {
+      led_cmd.mode = LedMode::kBlink;
+      led_cmd.period_ms = result.value();
+    } else {
+      embeddedCliPrint(cli, "\tInvalid blink period");
+      return;
+    }
+  } else {
+    embeddedCliPrint(cli, "\tInvalid command");
+    return;
+  }
+  xQueueSend(led_commands_queue, &led_cmd, 0);
 }
 
 int main(void) {
@@ -169,17 +228,21 @@ int main(void) {
 
   assert(check_inits() == 0);
 
+  QueueHandle_t led_commands_queue = xQueueCreate(1, sizeof(LedCommand));
+
   auto config = embeddedCliDefaultConfig();
   config->historyBufferSize = 32;
   config->enableAutoComplete = false;
 
   EmbeddedCli* cli = embeddedCliNew(config);
   cli->writeChar = writeChar;
-  embeddedCliAddBinding(cli, {"led", "Control LED", true, nullptr, CliLed});
+  embeddedCliAddBinding(
+      cli, {"led", "Control LED", true, static_cast<void*>(led_commands_queue), CliLed});
 
   uart_semaphore = xSemaphoreCreateBinary();
 
-  // xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, nullptr, 1, nullptr);
+  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, static_cast<void*>(led_commands_queue),
+              1, nullptr);
   xTaskCreate(task_array, "array", configMINIMAL_STACK_SIZE, nullptr, 2, nullptr);
   xTaskCreate(task_vector, "vector", configMINIMAL_STACK_SIZE, nullptr, 3, nullptr);
   xTaskCreate(task_uart_rx, "uart_rx", configMINIMAL_STACK_SIZE, static_cast<void*>(cli), 1,

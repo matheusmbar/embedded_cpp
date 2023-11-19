@@ -11,6 +11,7 @@
 #include "etl/to_arithmetic.h"
 #include "etl/to_string.h"
 #include "etl/vector.h"
+#include "led.hpp"
 #include "mymath.hpp"
 #include "test_cpp.hpp"
 
@@ -36,15 +37,6 @@ constexpr auto led_pin = GPIO13;
 constexpr auto led_port = GPIOC;
 
 xSemaphoreHandle uart_semaphore;
-
-/* Led module implementation */
-enum class LedMode { kOn, kOff, kBlink, kToggle };
-struct LedCommand {
-  LedMode mode{LedMode::kOff};
-  uint32_t period_ms{1000};
-};
-
-/* Led module implementation */
 
 static void clock_setup(void) {
   /* Select 72 MHz clock*/

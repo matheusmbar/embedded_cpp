@@ -38,10 +38,9 @@ constexpr auto led_port = GPIOC;
 
 namespace Globals {
 uint32_t timer32bits = 0;
-}  // namespace Globals
-
 xSemaphoreHandle uart_semaphore;
 EmbeddedCli* cli_{nullptr};
+}  // namespace Globals
 
 static void clock_setup(void) {
   /* Select 72 MHz clock*/
@@ -85,10 +84,10 @@ void USART1_IRQHandler(void) {
   /* Check if we were called because of RXNE. */
   if (((USART_CR1(USART1) & USART_CR1_RXNEIE) != 0) && ((USART_SR(USART1) & USART_SR_RXNE) != 0)) {
     uint16_t data = usart_recv(USART1);
-    if (cli_) {
-      embeddedCliReceiveChar(cli_, static_cast<char>(data));
+    if (Globals::cli_) {
+      embeddedCliReceiveChar(Globals::cli_, static_cast<char>(data));
       BaseType_t task_woken{pdFALSE};
-      xSemaphoreGiveFromISR(uart_semaphore, &task_woken);
+      xSemaphoreGiveFromISR(Globals::uart_semaphore, &task_woken);
       if (task_woken) {
         portYIELD()
       }
@@ -169,7 +168,7 @@ void task_cli(void* pvParameters) {
   auto cli = static_cast<EmbeddedCli*>(pvParameters);
   for (;;) {
     embeddedCliProcess(cli);
-    xSemaphoreTake(uart_semaphore, portMAX_DELAY);
+    xSemaphoreTake(Globals::uart_semaphore, portMAX_DELAY);
   }
 }
 
@@ -254,22 +253,22 @@ int main(void) {
   assert(check_inits() == 0);
 
   QueueHandle_t led_commands_queue = xQueueCreate(1, sizeof(LedCommand));
+  Globals::uart_semaphore = xSemaphoreCreateBinary();
 
   auto config = embeddedCliDefaultConfig();
   config->historyBufferSize = 32;
   config->enableAutoComplete = false;
 
-  cli_ = embeddedCliNew(config);
-  cli_->writeChar = writeChar;
+  Globals::cli_ = embeddedCliNew(config);
+  Globals::cli_->writeChar = writeChar;
   embeddedCliAddBinding(
-      cli_, {"led", "Control LED", true, static_cast<void*>(led_commands_queue), CliLed});
-
-  uart_semaphore = xSemaphoreCreateBinary();
+      Globals::cli_, {"led", "Control LED", true, static_cast<void*>(led_commands_queue), CliLed});
+  embeddedCliAddBinding(Globals::cli_, {"stats", "Get FreeRTOS stats", true, nullptr, CliStats});
 
   xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, static_cast<void*>(led_commands_queue),
               1, nullptr);
-  xTaskCreate(task_cli, "task_cli", 3 * configMINIMAL_STACK_SIZE, static_cast<void*>(cli_), 2,
-              nullptr);
+  xTaskCreate(task_cli, "task_cli", 3 * configMINIMAL_STACK_SIZE, static_cast<void*>(Globals::cli_),
+              2, nullptr);
 
   vTaskStartScheduler();
 

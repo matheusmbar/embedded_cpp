@@ -60,11 +60,9 @@ set(CMAKE_C_FLAGS   "${OBJECT_GEN_FLAGS} -std=c17" CACHE INTERNAL "C Compiler op
 # -std=c++17
 set(CMAKE_CXX_FLAGS "${OBJECT_GEN_FLAGS} -fno-exceptions -std=c++17" CACHE INTERNAL "C++ Compiler options")
 
-# set Debug and Release compile options
-set(CMAKE_C_FLAGS_DEBUG      "-Og -g -ggdb3 -DDEBUG" CACHE INTERNAL "")
-set(CMAKE_C_FLAGS_RELEASE    "-Os" CACHE INTERNAL "")
-set(CMAKE_CXX_FLAGS_DEBUG    "${CMAKE_C_FLAGS_DEBUG}" CACHE INTERNAL "")
-set(CMAKE_CXX_FLAGS_RELEASE  "${CMAKE_C_FLAGS_RELEASE}" CACHE INTERNAL "")
+# set Debug compile options
+set(CMAKE_C_FLAGS_DEBUG      "-Og -g -ggdb3" CACHE INTERNAL "")
+set(CMAKE_CXX_FLAGS_DEBUG    "-Og -g -ggdb3" CACHE INTERNAL "")
 
 set(CMAKE_EXECUTABLE_SUFFIX_C   .elf)
 set(CMAKE_EXECUTABLE_SUFFIX_CXX .elf)

@@ -9,6 +9,7 @@
 #include <task.h>
 
 #include "etl/string.h"
+#include "etl/string_stream.h"
 #include "etl/to_arithmetic.h"
 #include "etl/to_string.h"
 #include "led.hpp"
@@ -133,7 +134,15 @@ static void gpio_setup(void) {
 }
 
 void etl_log_error(const etl::exception& e) {
-  std::printf("ERROR %s\n", e.what());
+  etl::string<80> error_msg;
+  etl::string_stream stream(error_msg);
+  stream << e.file_name() << ":" << e.line_number() << " ERROR " << e.what();
+
+  if (Globals::cli_) {
+    embeddedCliPrint(Globals::cli_, error_msg.c_str());
+  } else {
+    std::printf("%s\r\n", error_msg.c_str());
+  }
 }
 
 void task_blink(void* pvParameters) {
@@ -234,6 +243,8 @@ void CliLed(EmbeddedCli* cli, char* args, void* context) {
 void CliStats(EmbeddedCli* cli, char* args, void* context) {
   etl::array<char, 200> buffer;
   // this function uses a lot of stack memory (~500 bytes for 3 tasks)
+  // and around 2KB in binary flash size as well
+  // TODO(matheusmbar) try optimizing this by removing stats pretty print
   vTaskGetRunTimeStats(buffer.data());
   embeddedCliPrint(cli, buffer.data());
 }
@@ -246,11 +257,12 @@ int main(void) {
   usart_setup();
 
   std::printf("\r\nBOOTING\r\n");
+  std::printf("Compiled at %s %s\r\n", __DATE__, __TIME__);
   std::printf("PERIPHERALS INITIALIZED\r\n");
 
   etl::error_handler::set_callback<etl_log_error>();
 
-  assert(check_inits() == 0);
+  ETL_ASSERT(check_inits() == 0, etl::exception("check_inits failed", __FILE_NAME__, __LINE__))
 
   QueueHandle_t led_commands_queue = xQueueCreate(1, sizeof(LedCommand));
   Globals::uart_semaphore = xSemaphoreCreateBinary();

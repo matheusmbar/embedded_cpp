@@ -7,6 +7,7 @@ FetchContent_Declare(
   GIT_TAG        v0.1.3
   GIT_SHALLOW    TRUE
   GIT_PROGRESS   TRUE
+  SOURCE_DIR     "${CMAKE_SOURCE_DIR}/thirdy-party/embedded_cli"
 )
 
 FetchContent_MakeAvailable(embedded_cli)

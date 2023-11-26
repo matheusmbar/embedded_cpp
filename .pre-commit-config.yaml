@@ -32,4 +32,9 @@ repos:
       - id: cppcheck
         exclude: sys\/.*.c
         exclude_types: [header]
+        args:
+          - "--suppress=missingInclude"
+          - "--suppress=missingIncludeSystem"
+          - "--suppress=unusedFunction"
+          - "--suppress=unmatchedSuppression"
       - id: cpplint

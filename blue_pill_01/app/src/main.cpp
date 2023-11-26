@@ -2,12 +2,14 @@
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/timer.h>
 #include <libopencm3/stm32/usart.h>
 #include <queue.h>
 #include <semphr.h>
 #include <task.h>
 
 #include "etl/string.h"
+#include "etl/string_stream.h"
 #include "etl/to_arithmetic.h"
 #include "etl/to_string.h"
 #include "led.hpp"
@@ -35,8 +37,11 @@ Test_CPP test_cpp(1001);
 constexpr auto led_pin = GPIO13;
 constexpr auto led_port = GPIOC;
 
+namespace Globals {
+uint32_t timer32bits = 0;
 xSemaphoreHandle uart_semaphore;
 EmbeddedCli* cli_{nullptr};
+}  // namespace Globals
 
 static void clock_setup(void) {
   /* Select 72 MHz clock*/
@@ -80,14 +85,45 @@ void USART1_IRQHandler(void) {
   /* Check if we were called because of RXNE. */
   if (((USART_CR1(USART1) & USART_CR1_RXNEIE) != 0) && ((USART_SR(USART1) & USART_SR_RXNE) != 0)) {
     uint16_t data = usart_recv(USART1);
-    if (cli_) {
-      embeddedCliReceiveChar(cli_, static_cast<char>(data));
+    if (Globals::cli_) {
+      embeddedCliReceiveChar(Globals::cli_, static_cast<char>(data));
       BaseType_t task_woken{pdFALSE};
-      xSemaphoreGiveFromISR(uart_semaphore, &task_woken);
+      xSemaphoreGiveFromISR(Globals::uart_semaphore, &task_woken);
       if (task_woken) {
         portYIELD()
       }
     }
+  }
+}
+
+void SetupStatsTimer(void) {
+  /* Enable TIM2 clock. */
+  rcc_periph_clock_enable(RCC_TIM2);
+  /* Enable TIM2 interrupt. */
+  nvic_enable_irq(NVIC_TIM2_IRQ);
+  /* Reset TIM2 peripheral to defaults. */
+  rcc_periph_reset_pulse(RST_TIM2);
+  /* Set the prescaler to have the timer run at 10kHz */
+  timer_set_prescaler(TIM2, (rcc_apb1_frequency / 10000));
+  /* Disable preload, run continuously up to max value */
+  timer_disable_preload(TIM2);
+  timer_continuous_mode(TIM2);
+  timer_set_period(TIM2, 65535);
+  /* Counter enable. */
+  timer_enable_counter(TIM2);
+  /* Enable Channel 1 compare interrupt to increment 32bits count */
+  timer_enable_irq(TIM2, TIM_DIER_CC1IE);
+}
+
+uint32_t GetStatsTimerCount(void) {
+  return Globals::timer32bits + timer_get_counter(TIM2);
+}
+
+void TIM2_IRQHandler(void) {
+  if (timer_get_flag(TIM2, TIM_SR_CC1IF)) {
+    /* Clear compare interrupt flag. */
+    timer_clear_flag(TIM2, TIM_SR_CC1IF);
+    Globals::timer32bits += UINT16_MAX;
   }
 }
 }
@@ -98,7 +134,15 @@ static void gpio_setup(void) {
 }
 
 void etl_log_error(const etl::exception& e) {
-  std::printf("ERROR %s\n", e.what());
+  etl::string<80> error_msg;
+  etl::string_stream stream(error_msg);
+  stream << e.file_name() << ":" << e.line_number() << " ERROR " << e.what();
+
+  if (Globals::cli_) {
+    embeddedCliPrint(Globals::cli_, error_msg.c_str());
+  } else {
+    std::printf("%s\r\n", error_msg.c_str());
+  }
 }
 
 void task_blink(void* pvParameters) {
@@ -133,7 +177,7 @@ void task_cli(void* pvParameters) {
   auto cli = static_cast<EmbeddedCli*>(pvParameters);
   for (;;) {
     embeddedCliProcess(cli);
-    xSemaphoreTake(uart_semaphore, portMAX_DELAY);
+    xSemaphoreTake(Globals::uart_semaphore, portMAX_DELAY);
   }
 }
 
@@ -196,6 +240,15 @@ void CliLed(EmbeddedCli* cli, char* args, void* context) {
   xQueueSend(led_commands_queue, &led_cmd, 0);
 }
 
+void CliStats(EmbeddedCli* cli, char* args, void* context) {
+  etl::array<char, 200> buffer;
+  // this function uses a lot of stack memory (~500 bytes for 3 tasks)
+  // and around 2KB in binary flash size as well
+  // TODO(matheusmbar) try optimizing this by removing stats pretty print
+  vTaskGetRunTimeStats(buffer.data());
+  embeddedCliPrint(cli, buffer.data());
+}
+
 int main(void) {
   static_assert(__cplusplus == 201703);
 
@@ -204,28 +257,30 @@ int main(void) {
   usart_setup();
 
   std::printf("\r\nBOOTING\r\n");
+  std::printf("Compiled at %s %s\r\n", __DATE__, __TIME__);
   std::printf("PERIPHERALS INITIALIZED\r\n");
 
   etl::error_handler::set_callback<etl_log_error>();
 
-  assert(check_inits() == 0);
+  ETL_ASSERT(check_inits() == 0, etl::exception("check_inits failed", __FILE_NAME__, __LINE__))
 
   QueueHandle_t led_commands_queue = xQueueCreate(1, sizeof(LedCommand));
+  Globals::uart_semaphore = xSemaphoreCreateBinary();
 
   auto config = embeddedCliDefaultConfig();
   config->historyBufferSize = 32;
   config->enableAutoComplete = false;
 
-  cli_ = embeddedCliNew(config);
-  cli_->writeChar = writeChar;
+  Globals::cli_ = embeddedCliNew(config);
+  Globals::cli_->writeChar = writeChar;
   embeddedCliAddBinding(
-      cli_, {"led", "Control LED", true, static_cast<void*>(led_commands_queue), CliLed});
-
-  uart_semaphore = xSemaphoreCreateBinary();
+      Globals::cli_, {"led", "Control LED", true, static_cast<void*>(led_commands_queue), CliLed});
+  embeddedCliAddBinding(Globals::cli_, {"stats", "Get FreeRTOS stats", true, nullptr, CliStats});
 
   xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, static_cast<void*>(led_commands_queue),
               1, nullptr);
-  xTaskCreate(task_cli, "task_cli", configMINIMAL_STACK_SIZE, static_cast<void*>(cli_), 2, nullptr);
+  xTaskCreate(task_cli, "task_cli", 3 * configMINIMAL_STACK_SIZE, static_cast<void*>(Globals::cli_),
+              2, nullptr);
 
   vTaskStartScheduler();
 

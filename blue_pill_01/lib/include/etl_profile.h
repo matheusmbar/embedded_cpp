@@ -10,4 +10,8 @@
 #define ETL_VERBOSE_ERRORS  // If this is defined then error messages and ouput in their long form.
 #define ETL_CHECK_PUSH_POP  // Pushes and pops to containers are checked for bounds.
 
+#ifndef NDEBUG
+#define ETL_IS_DEBUG_BUILD
+#endif
+
 #endif  // LIB_INCLUDE_ETL_PROFILE_H_

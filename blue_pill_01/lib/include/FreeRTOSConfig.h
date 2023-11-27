@@ -96,8 +96,10 @@ NVIC value of 255. */
 // #define configUSE_NEWLIB_REENTRANT 1
 
 /* Setup runtime stats */
+#ifndef BUILD_TESTS
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()  SetupStatsTimer()/* Define this to initialize your timer/counter */
 #define portGET_RUN_TIME_COUNTER_VALUE()          GetStatsTimerCount()  /* Define this to sample the timer/counter */
 #define configUSE_STATS_FORMATTING_FUNCTIONS      1
+#endif
 
 #endif  // LIB_INCLUDE_FREERTOSCONFIG_H_

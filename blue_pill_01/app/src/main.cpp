@@ -194,9 +194,11 @@ void CliLed(EmbeddedCli* cli, char* args, void* context) {
   auto led_commands_queue = static_cast<QueueHandle_t>(context);
   LedCommand led_cmd;
   embeddedCliPrint(cli, "LED");
+  constexpr auto commands = "[on, off, toggle, blink <period_ms>]";
   const char* arg_1 = embeddedCliGetToken(args, 1);
   if (arg_1 == nullptr) {
     embeddedCliPrint(cli, "\tMissing command");
+    embeddedCliPrint(cli, commands);
     return;
   }
 
@@ -227,6 +229,7 @@ void CliLed(EmbeddedCli* cli, char* args, void* context) {
     }
   } else {
     embeddedCliPrint(cli, "\tInvalid command");
+    embeddedCliPrint(cli, commands);
     return;
   }
   xQueueSend(led_commands_queue, &led_cmd, 0);

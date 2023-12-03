@@ -5,10 +5,12 @@ add_library(project_lib "")
 target_sources(project_lib
   PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/mymath.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/led/led_gpio.cpp
   )
 
 target_include_directories(project_lib
   INTERFACE
+    ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/include
   )
 

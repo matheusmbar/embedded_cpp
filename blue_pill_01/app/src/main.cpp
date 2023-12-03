@@ -8,10 +8,12 @@
 #include <semphr.h>
 #include <task.h>
 
+#include "devices/gpio/gpio_opencm3.hpp"
 #include "etl/string.h"
 #include "etl/string_stream.h"
 #include "etl/to_arithmetic.h"
 #include "etl/to_string.h"
+#include "led/led_gpio.hpp"
 #include "led/led_interface.hpp"
 #include "mymath.hpp"
 #include "test_cpp.hpp"
@@ -46,9 +48,6 @@ EmbeddedCli* cli_{nullptr};
 static void clock_setup(void) {
   /* Select 72 MHz clock*/
   rcc_clock_setup_pll(&rcc_hse_configs[RCC_CLOCK_HSE8_72MHZ]);
-
-  /* Enable clock for GPIO port C (for LED pin) */
-  rcc_periph_clock_enable(RCC_GPIOC);
 
   /* Enable clocks for GPIO port A (for GPIO_USART1_TX) and USART1. */
   rcc_periph_clock_enable(RCC_GPIOA);
@@ -128,11 +127,6 @@ void TIM2_IRQHandler(void) {
 }
 }
 
-static void gpio_setup(void) {
-  /* Configure LED GPIO */
-  gpio_set_mode(led_port, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, led_pin);
-}
-
 void etl_log_error(const etl::exception& e) {
   etl::string<80> error_msg;
   etl::string_stream stream(error_msg);
@@ -147,25 +141,23 @@ void etl_log_error(const etl::exception& e) {
 
 void task_blink(void* pvParameters) {
   auto led_commands_queue = static_cast<QueueHandle_t>(pvParameters);
-
+  LedGpio led(std::make_shared<GpioOpencm3>(GpioFunction::kOutput, led_port, led_pin), true);
   LedCommand cmd{LedMode::kOff, 0};
   auto ticks = portMAX_DELAY;
   for (;;) {
+    ticks = portMAX_DELAY;
     switch (cmd.mode) {
       case LedMode::kOff:
-        gpio_set(GPIOC, GPIO13);
-        ticks = portMAX_DELAY;
+        led.SetOff();
         break;
       case LedMode::kOn:
-        gpio_clear(GPIOC, GPIO13);
-        ticks = portMAX_DELAY;
+        led.SetOn();
         break;
       case LedMode::kToggle:
-        gpio_toggle(GPIOC, GPIO13);
-        ticks = portMAX_DELAY;
+        led.Toggle();
         break;
       case LedMode::kBlink:
-        gpio_toggle(GPIOC, GPIO13);
+        led.Toggle();
         ticks = pdMS_TO_TICKS(cmd.period_ms / 2);
         break;
     }
@@ -253,7 +245,6 @@ int main(void) {
   static_assert(__cplusplus == 201703);
 
   clock_setup();
-  gpio_setup();
   usart_setup();
 
   std::printf("\r\nBOOTING\r\n");

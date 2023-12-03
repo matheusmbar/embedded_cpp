@@ -2,8 +2,11 @@
 
 enum class GpioState { kLow, kHigh, kUnknown };
 
+enum class GpioFunction { kInput, kOutput };
+
 class GpioInterface {
  public:
+  virtual ~GpioInterface() = default;
   virtual GpioState Get() const = 0;
   virtual void Set(GpioState state) = 0;
   virtual void SetHigh() = 0;

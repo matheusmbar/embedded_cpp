@@ -1,6 +1,7 @@
 #include <FreeRTOS.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/i2c.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/stm32/usart.h>
@@ -9,6 +10,7 @@
 #include <task.h>
 
 #include "devices/gpio/gpio_opencm3.hpp"
+#include "devices/lcd/ssd1306.hpp"
 #include "etl/string.h"
 #include "etl/string_stream.h"
 #include "etl/to_arithmetic.h"
@@ -173,6 +175,62 @@ void task_cli(void* pvParameters) {
   }
 }
 
+void task_lcd(void* /*pvParameters*/) {
+  /* Enable clocks for I2C2 and AFIO. */
+  rcc_periph_clock_enable(RCC_I2C1);
+  rcc_periph_clock_enable(RCC_AFIO);
+  rcc_periph_clock_enable(RCC_GPIOB);
+
+  /* Set alternate functions for the SCL (PB6) and SDA (PB7) pins of I2C2. */
+  gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_ALTFN_OPENDRAIN,
+                GPIO_I2C1_SCL | GPIO_I2C1_SDA);
+
+  /* Disable the I2C before changing any configuration. */
+  i2c_peripheral_disable(I2C1);
+
+  /* APB1 is running at 36MHz. */
+  i2c_set_clock_frequency(I2C1, 72);
+
+  /* 400KHz - I2C Fast Mode */
+  i2c_set_fast_mode(I2C1);
+
+  i2c_set_speed(I2C1, i2c_speed_sm_100k, 72);
+
+  /*
+   * fclock for I2C is 36MHz APB2 -> cycle time 28ns, low time at 400kHz
+   * incl trise -> Thigh = 1600ns; CCR = tlow/tcycle = 0x1C,9;
+   * Datasheet suggests 0x1e.
+   */
+  i2c_set_ccr(I2C1, 0x1e);
+
+  /*
+   * fclock for I2C is 36MHz -> cycle time 28ns, rise time for
+   * 400kHz => 300ns and 100kHz => 1000ns; 300ns/28ns = 10;
+   * Incremented by 1 -> 11.
+   */
+  i2c_set_trise(I2C1, 0x0b);
+
+  /* If everything is configured -> enable the peripheral. */
+  i2c_peripheral_enable(I2C1);
+
+  SSD1306<128, 64> ssd1306(I2C1, 0x3C);
+  ssd1306.Initialize();
+
+  bool fill_white = true;
+  for (;;) {
+    fill_white = !fill_white;
+
+    if (fill_white) {
+      ssd1306.FillWhite();
+    } else {
+      ssd1306.FillBlack();
+    }
+    ssd1306.Refresh();
+
+    vTaskDelay(pdMS_TO_TICKS(500));
+  }
+}
+
 int check_inits() {
   if (auto check_c = test_c(); check_c) {
     std::printf("check_c failed [%d]\n", check_c);
@@ -275,6 +333,8 @@ int main(void) {
               1, nullptr);
   xTaskCreate(task_cli, "task_cli", 3 * configMINIMAL_STACK_SIZE, static_cast<void*>(Globals::cli_),
               2, nullptr);
+
+  xTaskCreate(task_lcd, "task_lcd", 4 * configMINIMAL_STACK_SIZE, nullptr, 2, nullptr);
 
   vTaskStartScheduler();
 

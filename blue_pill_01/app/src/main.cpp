@@ -314,7 +314,7 @@ int main(void) {
 
   etl::error_handler::set_callback<etl_log_error>();
 
-  ETL_ASSERT(check_inits() == 0, etl::exception("check_inits failed", __FILE_NAME__, __LINE__))
+  ETL_ASSERT(check_inits() == 0, etl::exception("check_inits failed", __FILE__, __LINE__))
 
   QueueHandle_t led_commands_queue = xQueueCreate(1, sizeof(LedCommand));
   Globals::uart_semaphore = xSemaphoreCreateBinary();

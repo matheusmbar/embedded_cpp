@@ -14,6 +14,7 @@
 #include "etl/string_stream.h"
 #include "etl/to_arithmetic.h"
 #include "etl/to_string.h"
+#include "etl/vector.h"
 #include "led/led_gpio.hpp"
 #include "led/led_interface.hpp"
 #include "mymath.hpp"
@@ -176,27 +177,57 @@ void task_cli(void* pvParameters) {
 }
 
 void task_lcd(void* /*pvParameters*/) {
-  SSD1306 lcd{I2C1};
+  auto btn5 = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO5);
+  auto btn4 = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO4);
+  auto btn3 = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO3);
+  auto btn2 = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO2);
+  auto btn1 = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO1);
+  auto btn0 = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO0);
+
+  SSD1306 lcd{I2C1, btn5, btn4, btn3, btn2, btn1, btn0};
   uint8_t count = 0;
   etl::string<15> msg{"Hello world"};
+
+  etl::vector<std::shared_ptr<GpioOpencm3>, 6> buttons;
+  buttons.push_back(btn5);
+  buttons.push_back(btn4);
+  buttons.push_back(btn3);
+  buttons.push_back(btn2);
+  buttons.push_back(btn1);
+  buttons.push_back(btn0);
+
   for (;;) {
-    if (count == 0) {
-      lcd.DrawStr(0, 25, msg);
-      count = 1;
-    } else if (count == 1) {
-      lcd.DrawCircle(112, 45, 13);
-      lcd.DrawBox(0, 40, 40, 10);
-      count = 2;
-    } else if (count == 2) {
-      lcd.DrawLine(0, 27, 127, 63);
-      lcd.DrawLine(0, 63, 127, 27);
-      count = 3;
-    } else if (count == 3) {
-      count = 4;
-    } else if (count == 4) {
-      lcd.ClearDisplay();
-      count = 0;
+    switch (count) {
+      case 1: {
+        lcd.ClearDisplay();
+        lcd.DrawStr(0, 25, msg);
+
+        uint8_t pos = 50;
+        for (const auto& btn : buttons) {
+          if (btn->Get() == GpioState::kHigh) {
+            lcd.DrawCircle(pos, 55, 2);
+          } else {
+            lcd.DrawCircle(pos, 60, 2);
+          }
+          pos += 4;
+        }
+      } break;
+      case 2:
+        lcd.DrawCircle(112, 45, 13);
+        lcd.DrawBox(0, 40, 10, 10);
+        break;
+      case 3:
+        lcd.DrawLine(0, 27, 127, 63);
+        lcd.DrawLine(0, 63, 127, 27);
+        break;
+      case 4:
+        break;
+      default:
+        count = 0;
+        break;
     }
+    ++count;
+
     lcd.Refresh();
     vTaskDelay(pdMS_TO_TICKS(500));
   }

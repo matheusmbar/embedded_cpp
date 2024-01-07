@@ -4,9 +4,16 @@
 #include <cstdint>
 #include <memory>
 
+#include "gpio/gpio_interface.hpp"
+
 class SSD1306 {
  public:
   explicit SSD1306(uint32_t i2c_bus);
+  explicit SSD1306(uint32_t i2c_bus, std::shared_ptr<GpioInterface> menu_select,
+                   std::shared_ptr<GpioInterface> menu_home,
+                   std::shared_ptr<GpioInterface> menu_next,
+                   std::shared_ptr<GpioInterface> menu_prev, std::shared_ptr<GpioInterface> menu_up,
+                   std::shared_ptr<GpioInterface> menu_down);
   ~SSD1306();
 
   void Refresh();

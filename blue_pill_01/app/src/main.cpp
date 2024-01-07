@@ -176,20 +176,28 @@ void task_cli(void* pvParameters) {
 }
 
 void task_lcd(void* /*pvParameters*/) {
-  SSD1306<128, 64> ssd1306(I2C1, 0x3C);
-  ssd1306.Initialize();
-
-  bool fill_white = true;
+  SSD1306 lcd{I2C1};
+  uint8_t count = 0;
+  etl::string<15> msg{"Hello world"};
   for (;;) {
-    fill_white = !fill_white;
-
-    if (fill_white) {
-      ssd1306.FillWhite();
-    } else {
-      ssd1306.FillBlack();
+    if (count == 0) {
+      lcd.DrawStr(0, 25, msg);
+      count = 1;
+    } else if (count == 1) {
+      lcd.DrawCircle(112, 45, 13);
+      lcd.DrawBox(0, 40, 40, 10);
+      count = 2;
+    } else if (count == 2) {
+      lcd.DrawLine(0, 27, 127, 63);
+      lcd.DrawLine(0, 63, 127, 27);
+      count = 3;
+    } else if (count == 3) {
+      count = 4;
+    } else if (count == 4) {
+      lcd.ClearDisplay();
+      count = 0;
     }
-    ssd1306.Refresh();
-
+    lcd.Refresh();
     vTaskDelay(pdMS_TO_TICKS(500));
   }
 }

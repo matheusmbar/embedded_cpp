@@ -32,7 +32,16 @@ GpioOpencm3::GpioOpencm3(GpioFunction function, uint32_t port, uint16_t pin)
   }
 
   switch (function_) {
+    case GpioFunction::kInputPullDown:
+      gpio_set_mode(port_, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, pin_);
+      gpio_clear(port_, pin_);
+      break;
+    case GpioFunction::kInputPullUp:
+      gpio_set_mode(port_, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, pin_);
+      gpio_set(port_, pin_);
+      break;
     case GpioFunction::kInput:
+      gpio_set_mode(port_, GPIO_MODE_INPUT, GPIO_CNF_INPUT_FLOAT, pin_);
       break;
     case GpioFunction::kOutput:
       gpio_set_mode(port_, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, pin_);

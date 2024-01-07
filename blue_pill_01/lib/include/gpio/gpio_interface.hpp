@@ -2,7 +2,7 @@
 
 enum class GpioState { kLow, kHigh, kUnknown };
 
-enum class GpioFunction { kInput, kOutput };
+enum class GpioFunction { kInput, kInputPullDown, kInputPullUp, kOutput };
 
 class GpioInterface {
  public:

@@ -5,14 +5,6 @@
 
 GpioOpencm3::GpioOpencm3(GpioFunction function, uint32_t port, uint16_t pin)
     : function_(function), port_(port), pin_(pin) {
-  switch (function_) {
-    case GpioFunction::kInput:
-      break;
-    case GpioFunction::kOutput:
-      gpio_set_mode(port_, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, pin_);
-      break;
-  }
-
   switch (port_) {
     case GPIOA:
       rcc_periph_clock_enable(RCC_GPIOA);
@@ -36,6 +28,14 @@ GpioOpencm3::GpioOpencm3(GpioFunction function, uint32_t port, uint16_t pin)
       rcc_periph_clock_enable(RCC_GPIOG);
       break;
     default:
+      break;
+  }
+
+  switch (function_) {
+    case GpioFunction::kInput:
+      break;
+    case GpioFunction::kOutput:
+      gpio_set_mode(port_, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, pin_);
       break;
   }
 }

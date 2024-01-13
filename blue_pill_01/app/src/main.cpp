@@ -9,13 +9,16 @@
 #include <task.h>
 
 #include "devices/gpio/gpio_opencm3.hpp"
+#include "devices/lcd/ssd1306.hpp"
 #include "etl/string.h"
 #include "etl/string_stream.h"
 #include "etl/to_arithmetic.h"
 #include "etl/to_string.h"
+#include "etl/vector.h"
 #include "led/led_gpio.hpp"
 #include "led/led_interface.hpp"
 #include "mymath.hpp"
+#include "peripherals/i2c.hpp"
 #include "test_cpp.hpp"
 
 #define EMBEDDED_CLI_IMPL
@@ -173,6 +176,61 @@ void task_cli(void* pvParameters) {
   }
 }
 
+void task_lcd(void* /*pvParameters*/) {
+  auto btn_up = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO4);
+  auto btn_left = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO3);
+  auto btn_down = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO2);
+  auto btn_center = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO1);
+  auto btn_right = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO0);
+
+  SSD1306 lcd{I2C1, btn_center, nullptr, btn_right, btn_left, btn_up, btn_down};
+  uint8_t count = 0;
+  etl::string<15> msg{"Hello world"};
+
+  etl::vector<std::shared_ptr<GpioOpencm3>, 6> buttons;
+  buttons.push_back(btn_up);
+  buttons.push_back(btn_left);
+  buttons.push_back(btn_down);
+  buttons.push_back(btn_center);
+  buttons.push_back(btn_right);
+
+  for (;;) {
+    switch (count) {
+      case 1: {
+        lcd.ClearDisplay();
+        lcd.DrawStr(0, 25, msg);
+
+        uint8_t pos = 50;
+        for (const auto& btn : buttons) {
+          if (btn->Get() == GpioState::kHigh) {
+            lcd.DrawCircle(pos, 55, 2);
+          } else {
+            lcd.DrawCircle(pos, 60, 2);
+          }
+          pos += 4;
+        }
+      } break;
+      case 2:
+        lcd.DrawCircle(112, 45, 13);
+        lcd.DrawBox(0, 40, 10, 10);
+        break;
+      case 3:
+        lcd.DrawLine(0, 27, 127, 63);
+        lcd.DrawLine(0, 63, 127, 27);
+        break;
+      case 4:
+        break;
+      default:
+        count = 0;
+        break;
+    }
+    ++count;
+
+    lcd.Refresh();
+    vTaskDelay(pdMS_TO_TICKS(500));
+  }
+}
+
 int check_inits() {
   if (auto check_c = test_c(); check_c) {
     std::printf("check_c failed [%d]\n", check_c);
@@ -249,6 +307,7 @@ int main(void) {
 
   clock_setup();
   usart_setup();
+  i2c_setup();
 
   std::printf("\r\nBOOTING\r\n");
   std::printf("Compiled at %s %s\r\n", __DATE__, __TIME__);
@@ -256,7 +315,7 @@ int main(void) {
 
   etl::error_handler::set_callback<etl_log_error>();
 
-  ETL_ASSERT(check_inits() == 0, etl::exception("check_inits failed", __FILE_NAME__, __LINE__))
+  ETL_ASSERT(check_inits() == 0, etl::exception("check_inits failed", __FILE__, __LINE__))
 
   QueueHandle_t led_commands_queue = xQueueCreate(1, sizeof(LedCommand));
   Globals::uart_semaphore = xSemaphoreCreateBinary();
@@ -275,6 +334,8 @@ int main(void) {
               1, nullptr);
   xTaskCreate(task_cli, "task_cli", 3 * configMINIMAL_STACK_SIZE, static_cast<void*>(Globals::cli_),
               2, nullptr);
+
+  xTaskCreate(task_lcd, "task_lcd", 4 * configMINIMAL_STACK_SIZE, nullptr, 2, nullptr);
 
   vTaskStartScheduler();
 

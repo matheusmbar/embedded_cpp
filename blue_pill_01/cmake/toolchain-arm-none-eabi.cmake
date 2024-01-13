@@ -52,7 +52,8 @@ endif()
 
 set(CPU_CORE_FLAGS "-mcpu=cortex-m3 -mthumb -msoft-float ")
 
-set(OBJECT_GEN_FLAGS "${CPU_CORE_FLAGS} -ffunction-sections -fdata-sections --specs=nosys.specs --specs=nano.specs")
+string(CONCAT OBJECT_GEN_FLAGS "${CPU_CORE_FLAGS} -ffunction-sections -fdata-sections --specs=nosys.specs --specs=nano.specs"
+                                " -fmacro-prefix-map=${CMAKE_SOURCE_DIR}=.")
 
 #  -std=c17
 set(CMAKE_C_FLAGS   "${OBJECT_GEN_FLAGS} -std=c17" CACHE INTERNAL "C Compiler options")

@@ -37,7 +37,11 @@
       "showDevDebugOutput": "vscode",
       "svdFile": "${workspaceRoot}/cmake/STM32F103.svd",
       "gdbPath": "/usr/bin/gdb-multiarch",
-      "preLaunchTask": "Build debug"
+      "preLaunchTask": "Build debug",
+      "preRestartCommands": [
+        "interrupt",
+        "load"
+      ]
     }
   ]
 }

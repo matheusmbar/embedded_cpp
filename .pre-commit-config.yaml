@@ -38,3 +38,5 @@ repos:
           - "--suppress=unusedFunction"
           - "--suppress=unmatchedSuppression"
       - id: cpplint
+        args:
+          - "--filter=-runtime/references"

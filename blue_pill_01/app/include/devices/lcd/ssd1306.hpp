@@ -1,5 +1,6 @@
 #pragma once
 #include <etl/string.h>
+#include <etl/vector.h>
 
 #include <cstdint>
 #include <memory>
@@ -27,6 +28,12 @@ class SSD1306 {
   void DrawCircle(uint16_t x0, uint16_t y0, uint16_t rad);
 
   uint16_t DrawStr(uint16_t x, uint16_t y, const etl::istring& text);
+
+  uint8_t UiMessage(const etl::istring& title_1, const etl::istring& title_2,
+                    const etl::istring& title_3, const etl::istring& buttons_list);
+  bool UiInputValue(const etl::istring& title, uint8_t min, uint8_t max, uint8_t& value);
+  bool UiSelectionList(const etl::istring& title, uint8_t& current_pos,
+                       const etl::istring& list_items);
 
  private:
   struct SSD1306Impl;

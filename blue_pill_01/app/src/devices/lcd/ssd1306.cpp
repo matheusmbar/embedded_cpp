@@ -1,6 +1,7 @@
 #include "devices/lcd/ssd1306.hpp"
 
 #include <etl/byte.h>
+#include <etl/string.h>
 #include <etl/vector.h>
 #include <libopencm3/stm32/i2c.h>
 
@@ -154,4 +155,35 @@ void SSD1306::DrawCircle(uint16_t x0, uint16_t y0, uint16_t rad) {
 
 uint16_t SSD1306::DrawStr(uint16_t x, uint16_t y, const etl::istring &text) {
   return u8g2_DrawStr(&pImpl_->u8g2, x, y, text.c_str());
+}
+
+uint8_t SSD1306::UiMessage(const etl::istring &title_1, const etl::istring &title_2,
+                           const etl::istring &title_3, const etl::istring &buttons_list) {
+  return u8g2_UserInterfaceMessage(&pImpl_->u8g2, title_1.c_str(), title_2.c_str(), title_3.c_str(),
+                                   buttons_list.c_str());
+}
+
+bool SSD1306::UiInputValue(const etl::istring &title, uint8_t min, uint8_t max, uint8_t &value) {
+  bool value_min_max = false;
+  if (value < min) {
+    value = min;
+    value_min_max = true;
+  } else if (value > max) {
+    value = max;
+    value_min_max = true;
+  }
+  bool value_changed =
+      u8g2_UserInterfaceInputValue(&pImpl_->u8g2, title.c_str(), "", &value, min, max, 3, "");
+  return value_changed || value_min_max;
+}
+
+bool SSD1306::UiSelectionList(const etl::istring &title, uint8_t &current_pos,
+                              const etl::istring &list_items) {
+  if (uint8_t new_pos = u8g2_UserInterfaceSelectionList(&pImpl_->u8g2, title.c_str(), current_pos,
+                                                        list_items.c_str());
+      new_pos) {
+    current_pos = new_pos;
+    return true;
+  }
+  return false;
 }

@@ -18,6 +18,7 @@
 #include "led/led_gpio.hpp"
 #include "led/led_interface.hpp"
 #include "mymath.hpp"
+#include "peripherals/clock.hpp"
 #include "peripherals/i2c.hpp"
 #include "peripherals/usart.hpp"
 #include "test_cpp.hpp"
@@ -48,11 +49,6 @@ uint32_t timer32bits = 0;
 xSemaphoreHandle uart_semaphore;
 EmbeddedCli* cli_{nullptr};
 }  // namespace Globals
-
-static void clock_setup(void) {
-  /* Select 72 MHz clock*/
-  rcc_clock_setup_pll(&rcc_hse_configs[RCC_CLOCK_HSE8_72MHZ]);
-}
 
 extern "C" {
 void USART1_IRQHandler(void) {

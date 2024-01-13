@@ -19,6 +19,7 @@
 #include "led/led_interface.hpp"
 #include "mymath.hpp"
 #include "peripherals/i2c.hpp"
+#include "peripherals/usart.hpp"
 #include "test_cpp.hpp"
 
 #define EMBEDDED_CLI_IMPL
@@ -51,35 +52,6 @@ EmbeddedCli* cli_{nullptr};
 static void clock_setup(void) {
   /* Select 72 MHz clock*/
   rcc_clock_setup_pll(&rcc_hse_configs[RCC_CLOCK_HSE8_72MHZ]);
-
-  /* Enable clocks for GPIO port A (for GPIO_USART1_TX) and USART1. */
-  rcc_periph_clock_enable(RCC_GPIOA);
-  rcc_periph_clock_enable(RCC_AFIO);
-  rcc_periph_clock_enable(RCC_USART1);
-}
-
-static void usart_setup(void) {
-  /* Enable the USART1 interrupt. */
-  nvic_enable_irq(NVIC_USART1_IRQ);
-
-  /* Setup GPIO pin GPIO_USART1_RE_TX on GPIO port A for transmit. */
-  gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO_USART1_TX);
-  /* Setup GPIO pin GPIO_USART1_RE_RX on GPIO port A for receive. */
-  gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO_USART1_RX);
-
-  /* Setup UART parameters. */
-  usart_set_baudrate(USART1, 115200);
-  usart_set_databits(USART1, 8);
-  usart_set_stopbits(USART1, USART_STOPBITS_1);
-  usart_set_parity(USART1, USART_PARITY_NONE);
-  usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
-  usart_set_mode(USART1, USART_MODE_TX_RX);
-
-  /* Enable USART1 Receive interrupt. */
-  USART_CR1(USART1) |= USART_CR1_RXNEIE;
-
-  /* Finally enable the USART. */
-  usart_enable(USART1);
 }
 
 extern "C" {
@@ -306,7 +278,7 @@ int main(void) {
   static_assert(__cplusplus == 201703);
 
   clock_setup();
-  usart_setup();
+  usart1_setup();
   i2c_setup();
 
   std::printf("\r\nBOOTING\r\n");

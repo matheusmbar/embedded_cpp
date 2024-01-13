@@ -131,6 +131,12 @@ SSD1306::SSD1306(uint32_t i2c_bus, std::shared_ptr<GpioInterface> menu_select,
   u8g2_SetFont(&pImpl_->u8g2, u8g2_font_ncenR10_tf);
 }
 
+#ifndef NDEBUG
+u8g2_t *SSD1306::GetU8g2() {
+  return &pImpl_->u8g2;
+}
+#endif
+
 SSD1306::~SSD1306() = default;
 
 void SSD1306::Refresh() {

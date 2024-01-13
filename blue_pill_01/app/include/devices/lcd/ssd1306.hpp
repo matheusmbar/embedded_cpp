@@ -7,6 +7,10 @@
 
 #include "gpio/gpio_interface.hpp"
 
+#ifndef NDEBUG
+#include "u8g2.h"
+#endif
+
 class SSD1306 {
  public:
   explicit SSD1306(uint32_t i2c_bus);
@@ -34,6 +38,10 @@ class SSD1306 {
   bool UiInputValue(const etl::istring& title, uint8_t min, uint8_t max, uint8_t& value);
   bool UiSelectionList(const etl::istring& title, uint8_t& current_pos,
                        const etl::istring& list_items);
+
+#ifndef NDEBUG
+  u8g2_t* GetU8g2();
+#endif
 
  private:
   struct SSD1306Impl;

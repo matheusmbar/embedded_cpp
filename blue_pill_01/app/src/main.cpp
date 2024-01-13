@@ -177,24 +177,22 @@ void task_cli(void* pvParameters) {
 }
 
 void task_lcd(void* /*pvParameters*/) {
-  auto btn5 = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO5);
-  auto btn4 = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO4);
-  auto btn3 = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO3);
-  auto btn2 = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO2);
-  auto btn1 = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO1);
-  auto btn0 = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO0);
+  auto btn_up = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO4);
+  auto btn_left = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO3);
+  auto btn_down = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO2);
+  auto btn_center = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO1);
+  auto btn_right = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO0);
 
-  SSD1306 lcd{I2C1, btn5, btn4, btn3, btn2, btn1, btn0};
+  SSD1306 lcd{I2C1, btn_center, nullptr, btn_right, btn_left, btn_up, btn_down};
   uint8_t count = 0;
   etl::string<15> msg{"Hello world"};
 
   etl::vector<std::shared_ptr<GpioOpencm3>, 6> buttons;
-  buttons.push_back(btn5);
-  buttons.push_back(btn4);
-  buttons.push_back(btn3);
-  buttons.push_back(btn2);
-  buttons.push_back(btn1);
-  buttons.push_back(btn0);
+  buttons.push_back(btn_up);
+  buttons.push_back(btn_left);
+  buttons.push_back(btn_down);
+  buttons.push_back(btn_center);
+  buttons.push_back(btn_right);
 
   for (;;) {
     switch (count) {

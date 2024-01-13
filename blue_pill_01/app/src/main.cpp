@@ -17,17 +17,15 @@
 #include "etl/vector.h"
 #include "led/led_gpio.hpp"
 #include "led/led_interface.hpp"
-#include "mymath.hpp"
 #include "peripherals/clock.hpp"
 #include "peripherals/i2c.hpp"
 #include "peripherals/usart.hpp"
-#include "test_cpp.hpp"
+#include "sys/checks/test_cpp.hpp"
 
 #define EMBEDDED_CLI_IMPL
 #include "embedded_cli.h"
 
 extern "C" {
-#include "test_c.h"
 
 int local_putchar(char ptr) {
   usart_send_blocking(USART1, ptr);
@@ -38,8 +36,6 @@ int local_putchar(char ptr) {
 void writeChar(EmbeddedCli* /* embeddedCli */, char c) {
   local_putchar(c);
 }
-
-Test_CPP test_cpp(1001);
 
 constexpr auto led_pin = GPIO13;
 constexpr auto led_port = GPIOC;
@@ -197,23 +193,6 @@ void task_lcd(void* /*pvParameters*/) {
     lcd.Refresh();
     vTaskDelay(pdMS_TO_TICKS(500));
   }
-}
-
-int check_inits() {
-  if (auto check_c = test_c(); check_c) {
-    std::printf("check_c failed [%d]\n", check_c);
-    return check_c;
-  }
-
-  if (1001 != test_cpp.getValue()) {
-    return 1001;
-  }
-
-  if (auto check_cpp = test_cpp.checkGlobals(); check_cpp) {
-    std::printf("check_cpp failed [%d]\n", check_cpp);
-    return check_cpp;
-  }
-  return 0;
 }
 
 void CliLed(EmbeddedCli* cli, char* args, void* context) {

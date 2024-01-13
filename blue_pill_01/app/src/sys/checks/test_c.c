@@ -1,5 +1,5 @@
 
-#include "test_c.h"
+#include "sys/checks/test_c.h"
 
 int global_c = 123;
 int zero_c = 0;

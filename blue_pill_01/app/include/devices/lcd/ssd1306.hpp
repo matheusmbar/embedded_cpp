@@ -23,6 +23,8 @@ class SSD1306 {
 
   void Refresh();
 
+  void ClearBuffer();
+
   void ClearDisplay();
 
   void DrawLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);

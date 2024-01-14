@@ -143,6 +143,10 @@ void SSD1306::Refresh() {
   u8g2_SendBuffer(&pImpl_->u8g2);
 }
 
+void SSD1306::ClearBuffer() {
+  u8g2_ClearBuffer(&pImpl_->u8g2);
+}
+
 void SSD1306::ClearDisplay() {
   u8g2_ClearDisplay(&pImpl_->u8g2);
 }

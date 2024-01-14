@@ -1,20 +1,21 @@
 #include <FreeRTOS.h>
-#include <libopencm3/cm3/nvic.h>
+#include <etl/string.h>
+#include <etl/string_stream.h>
+#include <etl/to_arithmetic.h>
+#include <etl/to_string.h>
+#include <etl/vector.h>
 #include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/stm32/usart.h>
 #include <queue.h>
 #include <semphr.h>
 #include <task.h>
 
+#define EMBEDDED_CLI_IMPL
+#include <embedded_cli.h>
+
 #include "devices/gpio/gpio_opencm3.hpp"
 #include "devices/lcd/ssd1306.hpp"
-#include "etl/string.h"
-#include "etl/string_stream.h"
-#include "etl/to_arithmetic.h"
-#include "etl/to_string.h"
-#include "etl/vector.h"
 #include "led/led_gpio.hpp"
 #include "led/led_interface.hpp"
 #include "peripherals/clock.hpp"
@@ -22,9 +23,6 @@
 #include "peripherals/timer.hpp"
 #include "peripherals/usart.hpp"
 #include "sys/checks/test_cpp.hpp"
-
-#define EMBEDDED_CLI_IMPL
-#include "embedded_cli.h"
 
 extern "C" {
 

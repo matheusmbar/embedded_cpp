@@ -1,4 +1,5 @@
 #include <FreeRTOS.h>
+#include <etl/algorithm.h>
 #include <etl/string.h>
 #include <etl/string_stream.h>
 #include <etl/to_arithmetic.h>
@@ -124,6 +125,89 @@ void task_cli(void* pvParameters) {
   }
 }
 
+namespace Snake {
+constexpr auto kStep = 6;
+constexpr auto kMinX = 6;
+constexpr auto kMaxX = 120;
+constexpr auto kMinY = 6;
+constexpr auto kMaxY = 60;
+constexpr auto kPosX = 1 + (kMaxX - kMinX) / kStep;
+constexpr auto kPosY = 1 + (kMaxY - kMinY) / kStep;
+constexpr auto kTotalPos = kPosX * kPosY;
+
+static_assert((kMaxX - kMinX) % kStep == 0);
+static_assert((kMaxY - kMinY) % kStep == 0);
+
+enum class Action { kUp, kDown, kLeft, kRight, kNone };
+
+};  // namespace Snake
+
+etl::array<uint8_t, 2> UpdateHead(const etl::array<uint8_t, 2>& current_head,
+                                  Snake::Action action) {
+  static auto last_action = Snake::Action::kLeft;
+
+  int16_t new_x = current_head[0];
+  int16_t new_y = current_head[1];
+
+  switch (action) {
+    case Snake::Action::kUp:
+      if (last_action == Snake::Action::kDown) {
+        action = Snake::Action::kDown;
+      }
+      break;
+    case Snake::Action::kDown:
+      if (last_action == Snake::Action::kUp) {
+        action = Snake::Action::kUp;
+      }
+      break;
+    case Snake::Action::kLeft:
+      if (last_action == Snake::Action::kRight) {
+        action = Snake::Action::kRight;
+      }
+      break;
+    case Snake::Action::kRight:
+      if (last_action == Snake::Action::kLeft) {
+        action = Snake::Action::kLeft;
+      }
+      break;
+    case Snake::Action::kNone:
+      action = last_action;
+      break;
+  }
+
+  switch (action) {
+    case Snake::Action::kUp:
+      new_y -= Snake::kStep;
+      break;
+    case Snake::Action::kDown:
+      new_y += Snake::kStep;
+      break;
+    case Snake::Action::kLeft:
+      new_x -= Snake::kStep;
+      break;
+    case Snake::Action::kRight:
+      new_x += Snake::kStep;
+      break;
+    default:
+      break;
+  }
+
+  if (new_x < Snake::kMinX) {
+    new_x = Snake::kMaxX;
+  } else if (new_x > Snake::kMaxX) {
+    new_x = Snake::kMinX;
+  }
+
+  if (new_y < Snake::kMinY) {
+    new_y = Snake::kMaxY;
+  } else if (new_y > Snake::kMaxY) {
+    new_y = Snake::kMinY;
+  }
+  last_action = action;
+
+  return etl::array<uint8_t, 2>({static_cast<uint8_t>(new_x), static_cast<uint8_t>(new_y)});
+}
+
 void task_lcd(void* /*pvParameters*/) {
   auto btn_up = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO4);
   auto btn_left = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO3);
@@ -132,7 +216,6 @@ void task_lcd(void* /*pvParameters*/) {
   auto btn_right = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO0);
 
   SSD1306 lcd{I2C1, btn_center, nullptr, btn_right, btn_left, btn_up, btn_down};
-  uint8_t count = 0;
   etl::string<15> msg{"Hello world"};
 
   etl::vector<std::shared_ptr<GpioOpencm3>, 6> buttons;
@@ -142,40 +225,109 @@ void task_lcd(void* /*pvParameters*/) {
   buttons.push_back(btn_center);
   buttons.push_back(btn_right);
 
-  for (;;) {
-    switch (count) {
-      case 1: {
-        lcd.ClearDisplay();
-        lcd.DrawStr(0, 25, msg);
+  const etl::vector<etl::array<uint8_t, 2>, 4> fruits{
+      {Snake::kMinX + Snake::kStep * 4, Snake::kMinY + Snake::kStep * 3},
+      {Snake::kMinX + Snake::kStep * 6, Snake::kMinY + Snake::kStep * 6},
+      {Snake::kMinX + Snake::kStep * 1, Snake::kMinY + Snake::kStep * 1},
+      {Snake::kMinX + Snake::kStep * 13, Snake::kMinY + Snake::kStep * 5}};
 
-        uint8_t pos = 50;
-        for (const auto& btn : buttons) {
-          if (btn->Get() == GpioState::kHigh) {
-            lcd.DrawCircle(pos, 55, 2);
-          } else {
-            lcd.DrawCircle(pos, 60, 2);
-          }
-          pos += 4;
-        }
-      } break;
-      case 2:
-        lcd.DrawCircle(112, 45, 13);
-        lcd.DrawBox(0, 40, 10, 10);
-        break;
-      case 3:
-        lcd.DrawLine(0, 27, 127, 63);
-        lcd.DrawLine(0, 63, 127, 27);
-        break;
-      case 4:
-        break;
-      default:
-        count = 0;
-        break;
+  int max_points = 0;
+
+  for (;;) {
+    etl::vector<etl::array<uint8_t, 2>, Snake::kTotalPos> snake;
+    for (uint8_t i = 0; i < 5; i++) {
+      uint8_t next_x = static_cast<uint8_t>(Snake::kStep) * i + 60;
+      snake.push_back(etl::array<uint8_t, 2>({next_x, 30}));
     }
-    ++count;
+
+    auto fruit = fruits.begin();
+    auto head = snake.begin();
+    int points = 0;
+
+    UpdateHead(*snake.begin(), Snake::Action::kUp);
+    UpdateHead(*snake.begin(), Snake::Action::kLeft);
+    lcd.ClearDisplay();
+
+    for (;;) {
+      lcd.ClearBuffer();
+
+      etl::to_string<size_t>(points, msg);
+      lcd.DrawStr(105, 15, msg);
+
+      for (const auto& section : snake) {
+        lcd.DrawCircle(section[0], section[1], 2);
+      }
+      lcd.DrawCircle((*snake.begin())[0], (*snake.begin())[1], 1);
+
+      lcd.DrawLine((*fruit)[0] - 2, (*fruit)[1] - 2, (*fruit)[0] + 2, (*fruit)[1] + 2);
+      lcd.DrawLine((*fruit)[0] - 2, (*fruit)[1] + 2, (*fruit)[0] + 2, (*fruit)[1] - 2);
+
+      bool eat_fruit = false;
+      if (*head == *fruit) {
+        eat_fruit = true;
+        ++points;
+        ++fruit;
+        if (fruit == fruits.end()) {
+          fruit = fruits.begin();
+        }
+      }
+
+      lcd.Refresh();
+
+      Snake::Action btn_action{Snake::Action::kNone};
+      for (auto i = 0; i < 10; i++) {
+        if (btn_up->Get() == GpioState::kHigh) {
+          btn_action = Snake::Action::kUp;
+        } else if (btn_down->Get() == GpioState::kHigh) {
+          btn_action = Snake::Action::kDown;
+        } else if (btn_left->Get() == GpioState::kHigh) {
+          btn_action = Snake::Action::kLeft;
+        } else if (btn_right->Get() == GpioState::kHigh) {
+          btn_action = Snake::Action::kRight;
+        }
+        int wait_ms = 20 - points;
+        wait_ms = wait_ms < 1 ? 1 : wait_ms;
+        vTaskDelay(pdMS_TO_TICKS(wait_ms));
+      }
+
+      if (!eat_fruit) {
+        snake.pop_back();
+      }
+      auto new_head = UpdateHead(*snake.begin(), btn_action);
+      if (etl::find(snake.begin(), snake.end(), new_head) != snake.end()) {
+        break;
+      }
+
+      snake.insert(snake.begin(), new_head);
+      head = snake.begin();
+    }
+
+    while (btn_center->Get() != GpioState::kHigh) {
+      vTaskDelay(pdMS_TO_TICKS(50));
+    }
+
+    lcd.ClearBuffer();
+    msg = "GAME OVER";
+    lcd.DrawStr(30, 30, msg);
+    etl::to_string<int>(points, msg);
+    lcd.DrawStr(60, 45, msg);
+    if (points > max_points) {
+      max_points = points;
+      msg = "New record!";
+    } else {
+      msg = "  Record: ";
+      etl::to_string<int>(max_points, msg, true);
+    }
+    lcd.DrawStr(35, 60, msg);
 
     lcd.Refresh();
-    vTaskDelay(pdMS_TO_TICKS(500));
+
+    while (btn_center->Get() != GpioState::kLow) {
+      vTaskDelay(pdMS_TO_TICKS(50));
+    }
+    while (btn_center->Get() != GpioState::kHigh) {
+      vTaskDelay(pdMS_TO_TICKS(50));
+    }
   }
 }
 

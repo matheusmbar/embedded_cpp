@@ -104,7 +104,7 @@ SSD1306::SSD1306(uint32_t i2c_bus) : pImpl_(std::make_unique<SSD1306Impl>()) {
                                          SSD1306Impl::gpio_and_delay_cb);
   u8g2_InitDisplay(&pImpl_->u8g2);
   u8g2_SetPowerSave(&pImpl_->u8g2, 0);  // wake up display
-  u8g2_SetFont(&pImpl_->u8g2, u8g2_font_ncenR10_tf);
+  SetFont(Font::k7x14B_Tr);
 
   // Set Buttons as active HIGH
   pImpl_->u8g2.u8x8.debounce_default_pin_state = 0;
@@ -128,7 +128,7 @@ SSD1306::SSD1306(uint32_t i2c_bus, std::shared_ptr<GpioInterface> menu_select,
                                          SSD1306Impl::gpio_and_delay_cb);
   u8g2_InitDisplay(&pImpl_->u8g2);
   u8g2_SetPowerSave(&pImpl_->u8g2, 0);  // wake up display
-  u8g2_SetFont(&pImpl_->u8g2, u8g2_font_ncenR10_tf);
+  SetFont(Font::k7x14B_Tr);
 }
 
 #ifndef NDEBUG
@@ -165,6 +165,18 @@ void SSD1306::DrawCircle(uint16_t x0, uint16_t y0, uint16_t rad) {
 
 uint16_t SSD1306::DrawStr(uint16_t x, uint16_t y, const etl::istring &text) {
   return u8g2_DrawStr(&pImpl_->u8g2, x, y, text.c_str());
+}
+
+void SSD1306::SetFont(Font font) {
+  switch (font) {
+    case Font::k5x7_Tn:
+      u8g2_SetFont(&pImpl_->u8g2, u8g2_font_5x7_tn);
+      break;
+    case Font::k7x14B_Tr:
+      u8g2_SetFont(&pImpl_->u8g2, u8g2_font_7x14B_tr);
+      break;
+  }
+  return;
 }
 
 uint8_t SSD1306::UiMessage(const etl::istring &title_1, const etl::istring &title_2,

@@ -21,6 +21,8 @@ class SSD1306 {
                    std::shared_ptr<GpioInterface> menu_down);
   ~SSD1306();
 
+  enum class Font { k5x7_Tn, k7x14B_Tr };
+
   void Refresh();
 
   void ClearBuffer();
@@ -34,6 +36,8 @@ class SSD1306 {
   void DrawCircle(uint16_t x0, uint16_t y0, uint16_t rad);
 
   uint16_t DrawStr(uint16_t x, uint16_t y, const etl::istring& text);
+
+  void SetFont(Font font);
 
   uint8_t UiMessage(const etl::istring& title_1, const etl::istring& title_2,
                     const etl::istring& title_3, const etl::istring& buttons_list);

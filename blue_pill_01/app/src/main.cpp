@@ -216,6 +216,7 @@ void task_lcd(void* /*pvParameters*/) {
   auto btn_right = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO0);
 
   SSD1306 lcd{I2C1, btn_center, nullptr, btn_right, btn_left, btn_up, btn_down};
+  lcd.SetFont(SSD1306::Font::k5x7_Tn);
   etl::string<15> msg{"Hello world"};
 
   etl::vector<std::shared_ptr<GpioOpencm3>, 6> buttons;
@@ -251,6 +252,7 @@ void task_lcd(void* /*pvParameters*/) {
     for (;;) {
       lcd.ClearBuffer();
 
+      lcd.SetFont(SSD1306::Font::k5x7_Tn);
       etl::to_string<size_t>(points, msg);
       lcd.DrawStr(105, 15, msg);
 
@@ -307,18 +309,19 @@ void task_lcd(void* /*pvParameters*/) {
     }
 
     lcd.ClearBuffer();
+    lcd.SetFont(SSD1306::Font::k7x14B_Tr);
     msg = "GAME OVER";
-    lcd.DrawStr(30, 30, msg);
+    lcd.DrawStr(30, 20, msg);
     etl::to_string<int>(points, msg);
-    lcd.DrawStr(60, 45, msg);
+    lcd.DrawStr(60, 40, msg);
     if (points > max_points) {
       max_points = points;
       msg = "New record!";
     } else {
-      msg = "  Record: ";
+      msg = "Record: ";
       etl::to_string<int>(max_points, msg, true);
     }
-    lcd.DrawStr(35, 60, msg);
+    lcd.DrawStr(28, 60, msg);
 
     lcd.Refresh();
 

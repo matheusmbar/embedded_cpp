@@ -23,6 +23,7 @@
 #include "peripherals/i2c.hpp"
 #include "peripherals/timer.hpp"
 #include "peripherals/usart.hpp"
+#include "snake.hpp"
 #include "sys/checks/test_cpp.hpp"
 
 extern "C" {
@@ -125,89 +126,6 @@ void task_cli(void* pvParameters) {
   }
 }
 
-namespace Snake {
-constexpr auto kStep = 6;
-constexpr auto kMinX = 6;
-constexpr auto kMaxX = 120;
-constexpr auto kMinY = 6;
-constexpr auto kMaxY = 60;
-constexpr auto kPosX = 1 + (kMaxX - kMinX) / kStep;
-constexpr auto kPosY = 1 + (kMaxY - kMinY) / kStep;
-constexpr auto kTotalPos = kPosX * kPosY;
-
-static_assert((kMaxX - kMinX) % kStep == 0);
-static_assert((kMaxY - kMinY) % kStep == 0);
-
-enum class Action { kUp, kDown, kLeft, kRight, kNone };
-
-};  // namespace Snake
-
-etl::array<uint8_t, 2> UpdateHead(const etl::array<uint8_t, 2>& current_head,
-                                  Snake::Action action) {
-  static auto last_action = Snake::Action::kLeft;
-
-  int16_t new_x = current_head[0];
-  int16_t new_y = current_head[1];
-
-  switch (action) {
-    case Snake::Action::kUp:
-      if (last_action == Snake::Action::kDown) {
-        action = Snake::Action::kDown;
-      }
-      break;
-    case Snake::Action::kDown:
-      if (last_action == Snake::Action::kUp) {
-        action = Snake::Action::kUp;
-      }
-      break;
-    case Snake::Action::kLeft:
-      if (last_action == Snake::Action::kRight) {
-        action = Snake::Action::kRight;
-      }
-      break;
-    case Snake::Action::kRight:
-      if (last_action == Snake::Action::kLeft) {
-        action = Snake::Action::kLeft;
-      }
-      break;
-    case Snake::Action::kNone:
-      action = last_action;
-      break;
-  }
-
-  switch (action) {
-    case Snake::Action::kUp:
-      new_y -= Snake::kStep;
-      break;
-    case Snake::Action::kDown:
-      new_y += Snake::kStep;
-      break;
-    case Snake::Action::kLeft:
-      new_x -= Snake::kStep;
-      break;
-    case Snake::Action::kRight:
-      new_x += Snake::kStep;
-      break;
-    default:
-      break;
-  }
-
-  if (new_x < Snake::kMinX) {
-    new_x = Snake::kMaxX;
-  } else if (new_x > Snake::kMaxX) {
-    new_x = Snake::kMinX;
-  }
-
-  if (new_y < Snake::kMinY) {
-    new_y = Snake::kMaxY;
-  } else if (new_y > Snake::kMaxY) {
-    new_y = Snake::kMinY;
-  }
-  last_action = action;
-
-  return etl::array<uint8_t, 2>({static_cast<uint8_t>(new_x), static_cast<uint8_t>(new_y)});
-}
-
 void task_lcd(void* /*pvParameters*/) {
   auto btn_up = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO4);
   auto btn_left = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO3);
@@ -235,48 +153,39 @@ void task_lcd(void* /*pvParameters*/) {
   int max_points = 0;
 
   for (;;) {
-    etl::vector<etl::array<uint8_t, 2>, Snake::kTotalPos> snake;
-    for (uint8_t i = 0; i < 5; i++) {
-      uint8_t next_x = static_cast<uint8_t>(Snake::kStep) * i + 60;
-      snake.push_back(etl::array<uint8_t, 2>({next_x, 30}));
-    }
+    Snake snake;
 
     auto fruit = fruits.begin();
-    auto head = snake.begin();
     int points = 0;
 
-    UpdateHead(*snake.begin(), Snake::Action::kUp);
-    UpdateHead(*snake.begin(), Snake::Action::kLeft);
+    snake.Reset();
     lcd.ClearDisplay();
 
-    for (;;) {
+    while (!snake.ColisionDetected()) {
       lcd.ClearBuffer();
 
       lcd.SetFont(SSD1306::Font::k5x7_Tn);
       etl::to_string<size_t>(points, msg);
       lcd.DrawStr(105, 15, msg);
 
-      for (const auto& section : snake) {
+      for (const auto& section : snake.GetBody()) {
         lcd.DrawCircle(section[0], section[1], 2);
       }
-      lcd.DrawCircle((*snake.begin())[0], (*snake.begin())[1], 1);
+      const auto head2 = snake.GetHead();
+      lcd.DrawCircle(head2[0], head2[1], 1);
 
       lcd.DrawLine((*fruit)[0] - 2, (*fruit)[1] - 2, (*fruit)[0] + 2, (*fruit)[1] + 2);
       lcd.DrawLine((*fruit)[0] - 2, (*fruit)[1] + 2, (*fruit)[0] + 2, (*fruit)[1] - 2);
 
-      bool eat_fruit = false;
-      if (*head == *fruit) {
-        eat_fruit = true;
-        ++points;
+      if (snake.ProcessFruit(*fruit)) {
         ++fruit;
-        if (fruit == fruits.end()) {
-          fruit = fruits.begin();
-        }
+        fruit = fruit == fruits.end() ? fruits.begin() : fruit;
       }
+      points = snake.GetPoints();
 
       lcd.Refresh();
 
-      Snake::Action btn_action{Snake::Action::kNone};
+      auto btn_action{Snake::Action::kNone};
       for (auto i = 0; i < 10; i++) {
         if (btn_up->Get() == GpioState::kHigh) {
           btn_action = Snake::Action::kUp;
@@ -292,16 +201,7 @@ void task_lcd(void* /*pvParameters*/) {
         vTaskDelay(pdMS_TO_TICKS(wait_ms));
       }
 
-      if (!eat_fruit) {
-        snake.pop_back();
-      }
-      auto new_head = UpdateHead(*snake.begin(), btn_action);
-      if (etl::find(snake.begin(), snake.end(), new_head) != snake.end()) {
-        break;
-      }
-
-      snake.insert(snake.begin(), new_head);
-      head = snake.begin();
+      snake.ProcessAction(btn_action);
     }
 
     while (btn_center->Get() != GpioState::kHigh) {

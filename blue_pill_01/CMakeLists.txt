@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.22)
 # GoogleTest requires at least C++14
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(DEVICE "STM32F103C8TX")
 
 if (NOT DEFINED CMAKE_TOOLCHAIN_FILE AND NOT DEFINED BUILD_LIB_TESTS)
     set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cmake/toolchain-arm-none-eabi.cmake")
@@ -12,7 +13,7 @@ project(blue_pill_01 LANGUAGES C CXX)
 
 if(NOT BUILD_LIB_TESTS)
   ## Add linker script to flags
-  set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/cmake/STM32F103C8TX.ld")
+  set(LINKER_SCRIPT "${CMAKE_BINARY_DIR}/${DEVICE}.ld")
   set(CMAKE_EXE_LINKER_FLAGS
       "${CMAKE_EXE_LINKER_FLAGS} -T${LINKER_SCRIPT}"
       CACHE INTERNAL "Linker options")
@@ -47,7 +48,7 @@ add_subdirectory(lib)
 
 if(NOT BUILD_LIB_TESTS)
   ## Include low level sys implementation and application for cross-compiling
-  add_subdirectory(sys)
+  add_subdirectory(ld)
   add_subdirectory(app)
 endif()
 

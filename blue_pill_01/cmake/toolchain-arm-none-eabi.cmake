@@ -50,16 +50,17 @@ endif()
 # -mabi=aapcs           Defines enums to be a variable sized type.
 #set(OBJECT_GEN_FLAGS "-O0 -mthumb -fno-builtin -Wall -ffunction-sections -fdata-sections -fomit-frame-pointer -mabi=aapcs")
 
-set(CPU_CORE_FLAGS "-mcpu=cortex-m3 -mthumb -msoft-float ")
+set(CPU_CORE_FLAGS "-mcpu=cortex-m3 -mthumb -msoft-float")
 
-string(CONCAT OBJECT_GEN_FLAGS "${CPU_CORE_FLAGS} -ffunction-sections -fdata-sections --specs=nosys.specs --specs=nano.specs"
+string(CONCAT OBJECT_GEN_FLAGS "${CPU_CORE_FLAGS} -ffunction-sections -fdata-sections"
+                                " --specs=nosys.specs --specs=nano.specs -nostartfiles"
                                 " -fmacro-prefix-map=${CMAKE_SOURCE_DIR}=.")
 
 #  -std=c17
 set(CMAKE_C_FLAGS   "${OBJECT_GEN_FLAGS} -std=c17" CACHE INTERNAL "C Compiler options")
 
 # -std=c++17
-set(CMAKE_CXX_FLAGS "${OBJECT_GEN_FLAGS} -fno-exceptions -std=c++17" CACHE INTERNAL "C++ Compiler options")
+set(CMAKE_CXX_FLAGS "${OBJECT_GEN_FLAGS} -fno-exceptions -std=c++17 -fno-rtti -fno-use-cxa-atexit " CACHE INTERNAL "C++ Compiler options")
 
 # set Debug compile options
 set(CMAKE_C_FLAGS_DEBUG      "-Og -g -ggdb3" CACHE INTERNAL "")
@@ -71,7 +72,7 @@ set(CMAKE_EXECUTABLE_SUFFIX_ASM .elf)
 
 # -Wl,--gc-sections     Perform the dead code elimination.
 # -Map                  Generate linker map file
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--gc-sections ${CPU_CORE_FLAGS} -Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}" CACHE INTERNAL "Linker options")
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,--gc-sections -Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}" CACHE INTERNAL "Linker options")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}" CACHE INTERNAL "Linker options")
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)

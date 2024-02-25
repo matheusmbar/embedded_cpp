@@ -30,7 +30,7 @@ target_include_directories(${APP_NAME}
   )
 
 add_dependencies(${APP_NAME}
-  Sys
+  ldscript
   libopencm3_stm32f103
   freertos_kernel
   etl::etl
@@ -48,7 +48,6 @@ set_target_properties(${APP_NAME}
 ## Link application and libraries
 target_link_libraries(${APP_NAME}
   PUBLIC
-  Sys
   libopencm3_stm32f103
   freertos_kernel
   etl::etl

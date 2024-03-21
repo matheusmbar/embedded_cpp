@@ -6,7 +6,7 @@ $(error 'DEVICE' is not set)
 endif
 
 ifeq (,$(wildcard $(CPP)))
-$(warning CPP is not valid as '$(CPP)', trying to use $(CPP_DEFAULT))
+$(warning '$(CPP)' is not valid as CPP, trying to use $(CPP_DEFAULT))
 CPP := $(CPP_DEFAULT)
 endif
 
@@ -27,14 +27,14 @@ target = $(subst stm32,stm32/,$(genlink_family))
 
 include $(OPENCM3_DIR)/mk/genlink-rules.mk
 
-.PHONY: clean all arch_flags cppflags libname family subfamily libname
+.PHONY: clean all arch_flags target_flags libname family subfamily libname libfile
 
 all: $(LDSCRIPT)
 
 arch_flags:
 	@echo $(ARCH_FLAGS)
 
-cppflags:
+target_flags:
 	@echo $(genlink_cppflags)
 
 family:
@@ -47,7 +47,20 @@ target:
 	@echo $(target)
 
 libname:
+# LIBNAME is only available after libopencm3 has been built
 	@echo $(LIBNAME)
+
+libfile:
+	@echo $(OPENCM3_DIR)/lib/libopencm3_${genlink_family}.a
+
+all_vars:
+	@echo "arch_flags=$(ARCH_FLAGS)"
+	@echo "target_flags=$(genlink_cppflags)"
+	@echo "family=$(genlink_family)"
+	@echo "subfamily=$(genlink_subfamily)"
+	@echo "target=$(target)"
+	@echo "libname=$(LIBNAME)"
+	@echo "libfile=$(OPENCM3_DIR)/lib/lib$(LIBNAME).a"
 
 clean:
 	$(Q)$(RM) -rf $(LDSCRIPT)

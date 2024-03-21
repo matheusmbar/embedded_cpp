@@ -50,8 +50,6 @@ endif()
 # -mabi=aapcs           Defines enums to be a variable sized type.
 #set(OBJECT_GEN_FLAGS "-O0 -mthumb -fno-builtin -Wall -ffunction-sections -fdata-sections -fomit-frame-pointer -mabi=aapcs")
 
-set(CPU_CORE_FLAGS "-mcpu=cortex-m3 -mthumb -msoft-float")
-
 string(CONCAT OBJECT_GEN_FLAGS "${CPU_CORE_FLAGS} -ffunction-sections -fdata-sections"
                                 " --specs=nosys.specs --specs=nano.specs -nostartfiles"
                                 " -fmacro-prefix-map=${CMAKE_SOURCE_DIR}=.")

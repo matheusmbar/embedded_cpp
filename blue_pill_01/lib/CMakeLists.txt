@@ -6,7 +6,7 @@ target_sources(project_lib
   PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/mymath.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/devices/gpio/gpio_opencm3.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/led/led_gpio.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/devices/led/led_gpio.cpp
   )
 
 target_include_directories(project_lib

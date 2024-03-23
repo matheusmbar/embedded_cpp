@@ -17,8 +17,7 @@
 
 #include "devices/gpio/gpio_opencm3.hpp"
 #include "devices/lcd/ssd1306.hpp"
-#include "led/led_gpio.hpp"
-#include "led/led_interface.hpp"
+#include "devices/led/led_gpio.hpp"
 #include "peripherals/clock.hpp"
 #include "peripherals/i2c.hpp"
 #include "peripherals/timer.hpp"

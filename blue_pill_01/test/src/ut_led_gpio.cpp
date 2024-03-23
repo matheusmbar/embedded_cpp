@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "led/led_gpio.hpp"
+#include "devices/led/led_gpio.hpp"
 #include "mock/mock_gpio.hpp"
 
 using ::testing::AnyNumber;

@@ -1,4 +1,4 @@
-#include "led/led_gpio.hpp"
+#include "devices/led/led_gpio.hpp"
 
 LedGpio::LedGpio(std::shared_ptr<GpioInterface> gpio, bool on_at_low)
     : gpio_(gpio), on_at_low_(on_at_low) {}

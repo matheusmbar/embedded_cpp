@@ -11,7 +11,7 @@ add_executable(${APP_NAME} "")
 
 target_sources(${APP_NAME}
   PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/devices/gpio/gpio_opencm3.cpp"
+    # "${CMAKE_CURRENT_SOURCE_DIR}/src/devices/gpio/gpio_opencm3.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/devices/lcd/ssd1306.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/snake.cpp"

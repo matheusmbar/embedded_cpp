@@ -20,11 +20,26 @@ target_include_directories(
 
 # Select memory allocation implementation
 set( FREERTOS_HEAP "4" CACHE STRING "" FORCE)
-# Select the native compile PORT
-set( FREERTOS_PORT "GCC_POSIX" CACHE STRING "" FORCE)
+
 # Select the cross-compile PORT
 if (CMAKE_CROSSCOMPILING)
-    set(FREERTOS_PORT "GCC_ARM_CM3" CACHE STRING "" FORCE)
+  if (DEFINED DEVICE_FAMILY )
+    message(WARNING "DEVICE_FAMILY is defined as '${DEVICE_FAMILY}'")
+
+    # DEVICE_FAMILY -> PORT match
+    if ("${DEVICE_FAMILY}" MATCHES "^(stm32f1)$")
+      set(FREERTOS_PORT "GCC_ARM_CM3" CACHE STRING "" FORCE)
+    elseif("${DEVICE_FAMILY}" MATCHES "^(stm32f4)$")
+      set(FREERTOS_PORT "GCC_ARM_CM4F" CACHE STRING "" FORCE)
+    else()
+      set(FREERTOS_PORT CACHE)
+      message(SEND_ERROR " There is no FreeRTOS PORT match for family '${DEVICE_FAMILY}' yet\n"
+                         " Update DEVICE_FAMILY -> PORT match on 'freertos_kernel.cmake'")
+    endif()
+  endif()
+else()
+  # Select the native compile PORT
+  set( FREERTOS_PORT "GCC_POSIX" CACHE STRING "" FORCE)
 endif()
 
 FetchContent_MakeAvailable( freertos_kernel )

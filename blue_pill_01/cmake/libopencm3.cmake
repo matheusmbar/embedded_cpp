@@ -38,6 +38,13 @@ execute_process(
 )
 
 execute_process(
+  COMMAND               make -s ${PARAMS} family
+  WORKING_DIRECTORY     ${CMAKE_CURRENT_LIST_DIR}/opencm3
+  OUTPUT_VARIABLE       DEVICE_FAMILY
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+execute_process(
   COMMAND               make -s ${PARAMS} arch_flags
   WORKING_DIRECTORY     ${CMAKE_CURRENT_LIST_DIR}/opencm3
   OUTPUT_VARIABLE       ARCH_FLAGS
@@ -82,10 +89,12 @@ target_compile_definitions(libopencm3 INTERFACE ${OPENCM3_TARGET_FLAGS})
 set_property(TARGET libopencm3 PROPERTY ARCH_FLAGS    ${ARCH_FLAGS})
 set_property(TARGET libopencm3 PROPERTY OPENCM3_TARGET_FLAGS ${OPENCM3_TARGET_FLAGS})
 
+set(DEVICE_FAMILY "${DEVICE_FAMILY}" CACHE STRING "Target microcontroler family" FORCE)
 
 message(STATUS "OPENCM3_TARGET_FLAGS: ${OPENCM3_TARGET_FLAGS}")
 
 message(VERBOSE "ARCH_FLAGS: ${ARCH_FLAGS}")
+message(VERBOSE "DEVICE_FAMILY: ${DEVICE_FAMILY}")
 message(VERBOSE "LIBFILE: ${LIBFILE}")
 message(VERBOSE "OPENCM3_ALL_VARS\n${OPENCM3_ALL_VARS}")
 

@@ -30,8 +30,8 @@ target_include_directories(${APP_NAME}
   )
 
 add_dependencies(${APP_NAME}
-  Sys
-  libopencm3_stm32f103
+  libopencm3
+  libopencm3_ld
   freertos_kernel
   etl::etl
   EmbeddedCLI::EmbeddedCLI
@@ -48,8 +48,8 @@ set_target_properties(${APP_NAME}
 ## Link application and libraries
 target_link_libraries(${APP_NAME}
   PUBLIC
-  Sys
-  libopencm3_stm32f103
+  libopencm3
+  libopencm3_ld
   freertos_kernel
   etl::etl
   EmbeddedCLI::EmbeddedCLI

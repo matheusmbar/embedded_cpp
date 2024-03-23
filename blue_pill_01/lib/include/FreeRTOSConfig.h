@@ -95,6 +95,10 @@ NVIC value of 255. */
 /* Provide support for newlib's context management. */
 // #define configUSE_NEWLIB_REENTRANT 1
 
+#define vPortSVCHandler      sv_call_handler
+#define xPortPendSVHandler   pend_sv_handler
+#define xPortSysTickHandler  sys_tick_handler
+
 /* Setup runtime stats */
 #ifndef BUILD_TESTS
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()  SetupStatsTimer()/* Define this to initialize your timer/counter */

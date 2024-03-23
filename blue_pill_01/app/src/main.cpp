@@ -48,7 +48,7 @@ EmbeddedCli* cli_{nullptr};
 }  // namespace Globals
 
 extern "C" {
-void USART1_IRQHandler(void) {
+void usart1_isr(void) {
   /* Check if we were called because of RXNE. */
   if (((USART_CR1(USART1) & USART_CR1_RXNEIE) != 0) && ((USART_SR(USART1) & USART_SR_RXNE) != 0)) {
     uint16_t data = usart_recv(USART1);
@@ -71,7 +71,7 @@ uint32_t GetStatsTimerCount(void) {
   return Globals::timer32bits + timer_get_counter(TIM2);
 }
 
-void TIM2_IRQHandler(void) {
+void tim2_isr(void) {
   if (timer_get_flag(TIM2, TIM_SR_CC1IF)) {
     /* Clear compare interrupt flag. */
     timer_clear_flag(TIM2, TIM_SR_CC1IF);

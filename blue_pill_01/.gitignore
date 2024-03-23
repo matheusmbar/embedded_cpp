@@ -39,3 +39,6 @@ build*/
 
 # VS Code debug temp files
 .vscode/.cortex-debug.*.json
+
+# Cache folders
+.cache

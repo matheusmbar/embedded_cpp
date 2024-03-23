@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "gpio/gpio_interface.hpp"
-#include "led/led_interface.hpp"
+#include "devices/gpio/gpio_interface.hpp"
+#include "devices/led/led_interface.hpp"
 
 class LedGpio : public LedInterface {
  private:

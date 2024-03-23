@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "gpio/gpio_interface.hpp"
+#include "devices/gpio/gpio_interface.hpp"
 
 class GpioOpencm3 : public GpioInterface {
  public:

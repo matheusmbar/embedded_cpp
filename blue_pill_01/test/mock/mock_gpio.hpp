@@ -2,7 +2,7 @@
 
 #include <gmock/gmock.h>
 
-#include "gpio/gpio_interface.hpp"
+#include "devices/gpio/gpio_interface.hpp"
 
 class MockGpio : public GpioInterface {
  public:

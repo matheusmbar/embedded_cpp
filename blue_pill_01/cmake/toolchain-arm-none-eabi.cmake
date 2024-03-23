@@ -54,11 +54,9 @@ string(CONCAT OBJECT_GEN_FLAGS "${CPU_CORE_FLAGS} -ffunction-sections -fdata-sec
                                 " --specs=nosys.specs --specs=nano.specs -nostartfiles"
                                 " -fmacro-prefix-map=${CMAKE_SOURCE_DIR}=.")
 
-#  -std=c17
-set(CMAKE_C_FLAGS   "${OBJECT_GEN_FLAGS} -std=c17" CACHE INTERNAL "C Compiler options")
+set(CMAKE_C_FLAGS   "${OBJECT_GEN_FLAGS}" CACHE INTERNAL "C Compiler options")
 
-# -std=c++17
-set(CMAKE_CXX_FLAGS "${OBJECT_GEN_FLAGS} -fno-exceptions -std=c++17 -fno-rtti -fno-use-cxa-atexit " CACHE INTERNAL "C++ Compiler options")
+set(CMAKE_CXX_FLAGS "${OBJECT_GEN_FLAGS} -fno-exceptions -fno-rtti -fno-use-cxa-atexit " CACHE INTERNAL "C++ Compiler options")
 
 # set Debug compile options
 set(CMAKE_C_FLAGS_DEBUG      "-Og -g -ggdb3" CACHE INTERNAL "")

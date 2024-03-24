@@ -16,11 +16,11 @@ void Snake::Reset() {
   const uint8_t startLen = 5;
   for (uint8_t i = 0; i < startLen; i++) {
     uint8_t next_x = kStep * i + tailStartX;
-    body.push_back(etl::array<uint8_t, 2>({next_x, tailStartY}));
+    body.push_back(Position(next_x, tailStartY));
   }
 }
 
-bool Snake::ProcessFruit(const etl::array<uint8_t, 2>& fruit) {
+bool Snake::ProcessFruit(const Position fruit) {
   ate_fruit = (GetHead() == fruit);
   if (ate_fruit) {
     ++points;
@@ -43,11 +43,11 @@ bool Snake::ColisionDetected() const {
   return self_colision;
 }
 
-const etl::array<uint8_t, 2>& Snake::GetHead() const {
+const Position& Snake::GetHead() const {
   return *body.begin();
 }
 
-const etl::ivector<etl::array<uint8_t, 2>>& Snake::GetBody() const {
+const etl::ivector<Position>& Snake::GetBody() const {
   return body;
 }
 
@@ -56,8 +56,8 @@ int16_t Snake::GetPoints() const {
 }
 
 void Snake::CalculateNewHead(Snake::Action action) {
-  int16_t new_x = GetHead()[0];
-  int16_t new_y = GetHead()[1];
+  int16_t new_x = GetHead().x();
+  int16_t new_y = GetHead().y();
 
   switch (action) {
     case Action::kUp:
@@ -115,7 +115,7 @@ void Snake::CalculateNewHead(Snake::Action action) {
   }
   last_action = action;
 
-  new_head = etl::array<uint8_t, 2>({static_cast<uint8_t>(new_x), static_cast<uint8_t>(new_y)});
+  new_head = Position(static_cast<uint8_t>(new_x), static_cast<uint8_t>(new_y));
 }
 
 void Snake::CheckColision() {

@@ -1,9 +1,31 @@
 #pragma once
 
-#include <etl/array.h>
 #include <etl/vector.h>
 
 #include <cstdint>
+
+struct Position {
+  explicit Position(uint8_t x = 0, uint8_t y = 0) : x_(x), y_(y) {}
+
+  constexpr uint8_t x() const {
+    return x_;
+  }
+
+  constexpr uint8_t y() const {
+    return y_;
+  }
+
+ private:
+  uint8_t x_;
+  uint8_t y_;
+};
+
+constexpr bool operator==(const Position& lhs, const Position& rhs) {
+  return (lhs.x() == rhs.x()) && (lhs.y() == rhs.y());
+}
+constexpr bool operator!=(const Position& lhs, const Position& rhs) {
+  return !(lhs == rhs);
+}
 
 class Snake {
  public:
@@ -17,15 +39,15 @@ class Snake {
 
   void Reset();
 
-  bool ProcessFruit(const etl::array<uint8_t, 2>& fruit);
+  bool ProcessFruit(const Position fruit);
 
   void ProcessAction(Snake::Action action);
 
   bool ColisionDetected() const;
 
-  const etl::array<uint8_t, 2>& GetHead() const;
+  const Position& GetHead() const;
 
-  const etl::ivector<etl::array<uint8_t, 2>>& GetBody() const;
+  const etl::ivector<Position>& GetBody() const;
 
   int16_t GetPoints() const;
 
@@ -39,8 +61,8 @@ class Snake {
   static_assert((kMaxX - kMinX) % kStep == 0);
   static_assert((kMaxY - kMinY) % kStep == 0);
 
-  etl::vector<etl::array<uint8_t, 2>, Snake::kTotalPos> body;
-  etl::array<uint8_t, 2> new_head{};
+  etl::vector<Position, Snake::kTotalPos> body;
+  Position new_head;
 
   Action last_action{Action::kLeft};
   uint16_t points{0};

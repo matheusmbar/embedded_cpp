@@ -149,7 +149,7 @@ void task_lcd(void* /*pvParameters*/) {
   buttons.push_back(btn_center);
   buttons.push_back(btn_right);
 
-  const etl::vector<etl::array<uint8_t, 2>, 4> fruits{
+  const etl::vector<Position, 4> fruits{
       {Snake::kMinX + Snake::kStep * 4, Snake::kMinY + Snake::kStep * 3},
       {Snake::kMinX + Snake::kStep * 6, Snake::kMinY + Snake::kStep * 6},
       {Snake::kMinX + Snake::kStep * 1, Snake::kMinY + Snake::kStep * 1},
@@ -174,13 +174,13 @@ void task_lcd(void* /*pvParameters*/) {
       lcd.DrawStr(105, 15, msg);
 
       for (const auto& section : snake.GetBody()) {
-        lcd.DrawCircle(section[0], section[1], 2);
+        lcd.DrawCircle(section.x(), section.y(), 2);
       }
       const auto head2 = snake.GetHead();
-      lcd.DrawCircle(head2[0], head2[1], 1);
+      lcd.DrawCircle(head2.x(), head2.y(), 1);
 
-      lcd.DrawLine((*fruit)[0] - 2, (*fruit)[1] - 2, (*fruit)[0] + 2, (*fruit)[1] + 2);
-      lcd.DrawLine((*fruit)[0] - 2, (*fruit)[1] + 2, (*fruit)[0] + 2, (*fruit)[1] - 2);
+      lcd.DrawLine((*fruit).x() - 2, (*fruit).y() - 2, (*fruit).x() + 2, (*fruit).y() + 2);
+      lcd.DrawLine((*fruit).x() - 2, (*fruit).y() + 2, (*fruit).x() + 2, (*fruit).y() - 2);
 
       if (snake.ProcessFruit(*fruit)) {
         ++fruit;

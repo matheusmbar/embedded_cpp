@@ -9,12 +9,12 @@
 
 struct SSD1306::SSD1306Impl {
   static uint32_t i2c_bus_;
-  static std::shared_ptr<GpioInterface> menu_select_;
-  static std::shared_ptr<GpioInterface> menu_home_;
-  static std::shared_ptr<GpioInterface> menu_next_;
-  static std::shared_ptr<GpioInterface> menu_prev_;
-  static std::shared_ptr<GpioInterface> menu_up_;
-  static std::shared_ptr<GpioInterface> menu_down_;
+  static std::shared_ptr<ButtonInterface> menu_select_;
+  static std::shared_ptr<ButtonInterface> menu_home_;
+  static std::shared_ptr<ButtonInterface> menu_next_;
+  static std::shared_ptr<ButtonInterface> menu_prev_;
+  static std::shared_ptr<ButtonInterface> menu_up_;
+  static std::shared_ptr<ButtonInterface> menu_down_;
 
   u8g2_t u8g2;
   SSD1306Impl() = default;
@@ -62,22 +62,22 @@ struct SSD1306::SSD1306Impl {
     bool pressed = false;
     switch (msg) {
       case U8X8_MSG_GPIO_MENU_SELECT:
-        pressed = menu_select_ && (menu_select_->Get() == GpioState::kHigh);
+        pressed = menu_select_->IsPressed();
         break;
       case U8X8_MSG_GPIO_MENU_NEXT:
-        pressed = menu_next_ && (menu_next_->Get() == GpioState::kHigh);
+        pressed = menu_next_->IsPressed();
         break;
       case U8X8_MSG_GPIO_MENU_PREV:
-        pressed = menu_prev_ && (menu_prev_->Get() == GpioState::kHigh);
+        pressed = menu_prev_->IsPressed();
         break;
       case U8X8_MSG_GPIO_MENU_HOME:
-        pressed = menu_home_ && (menu_home_->Get() == GpioState::kHigh);
+        pressed = menu_home_->IsPressed();
         break;
       case U8X8_MSG_GPIO_MENU_UP:
-        pressed = menu_up_ && (menu_up_->Get() == GpioState::kHigh);
+        pressed = menu_up_->IsPressed();
         break;
       case U8X8_MSG_GPIO_MENU_DOWN:
-        pressed = menu_down_ && (menu_down_->Get() == GpioState::kHigh);
+        pressed = menu_down_->IsPressed();
         break;
       default:
         break;
@@ -90,12 +90,12 @@ struct SSD1306::SSD1306Impl {
 };
 
 uint32_t SSD1306::SSD1306Impl::i2c_bus_ = 0;
-std::shared_ptr<GpioInterface> SSD1306::SSD1306Impl::menu_select_;
-std::shared_ptr<GpioInterface> SSD1306::SSD1306Impl::menu_home_;
-std::shared_ptr<GpioInterface> SSD1306::SSD1306Impl::menu_next_;
-std::shared_ptr<GpioInterface> SSD1306::SSD1306Impl::menu_prev_;
-std::shared_ptr<GpioInterface> SSD1306::SSD1306Impl::menu_up_;
-std::shared_ptr<GpioInterface> SSD1306::SSD1306Impl::menu_down_;
+std::shared_ptr<ButtonInterface> SSD1306::SSD1306Impl::menu_select_;
+std::shared_ptr<ButtonInterface> SSD1306::SSD1306Impl::menu_home_;
+std::shared_ptr<ButtonInterface> SSD1306::SSD1306Impl::menu_next_;
+std::shared_ptr<ButtonInterface> SSD1306::SSD1306Impl::menu_prev_;
+std::shared_ptr<ButtonInterface> SSD1306::SSD1306Impl::menu_up_;
+std::shared_ptr<ButtonInterface> SSD1306::SSD1306Impl::menu_down_;
 
 SSD1306::SSD1306(uint32_t i2c_bus) : pImpl_(std::make_unique<SSD1306Impl>()) {
   SSD1306Impl::i2c_bus_ = i2c_bus;
@@ -110,10 +110,12 @@ SSD1306::SSD1306(uint32_t i2c_bus) : pImpl_(std::make_unique<SSD1306Impl>()) {
   pImpl_->u8g2.u8x8.debounce_default_pin_state = 0;
 }
 
-SSD1306::SSD1306(uint32_t i2c_bus, std::shared_ptr<GpioInterface> menu_select,
-                 std::shared_ptr<GpioInterface> menu_home, std::shared_ptr<GpioInterface> menu_next,
-                 std::shared_ptr<GpioInterface> menu_prev, std::shared_ptr<GpioInterface> menu_up,
-                 std::shared_ptr<GpioInterface> menu_down)
+SSD1306::SSD1306(uint32_t i2c_bus, std::shared_ptr<ButtonInterface> menu_select,
+                 std::shared_ptr<ButtonInterface> menu_home,
+                 std::shared_ptr<ButtonInterface> menu_next,
+                 std::shared_ptr<ButtonInterface> menu_prev,
+                 std::shared_ptr<ButtonInterface> menu_up,
+                 std::shared_ptr<ButtonInterface> menu_down)
     : pImpl_(std::make_unique<SSD1306Impl>()) {
   SSD1306Impl::menu_select_ = menu_select;
   SSD1306Impl::menu_home_ = menu_home;

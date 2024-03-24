@@ -15,6 +15,7 @@
 #define EMBEDDED_CLI_IMPL
 #include <embedded_cli.h>
 
+#include "devices/button/button_gpio.hpp"
 #include "devices/gpio/gpio_opencm3.hpp"
 #include "devices/lcd/ssd1306.hpp"
 #include "devices/led/led_gpio.hpp"
@@ -126,17 +127,22 @@ void task_cli(void* pvParameters) {
 }
 
 void task_lcd(void* /*pvParameters*/) {
-  auto btn_up = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO4);
-  auto btn_left = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO3);
-  auto btn_down = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO2);
-  auto btn_center = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO1);
-  auto btn_right = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO0);
+  auto btn_up = std::make_shared<ButtonGpio>(
+      std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO4), GpioState::kHigh);
+  auto btn_left = std::make_shared<ButtonGpio>(
+      std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO3), GpioState::kHigh);
+  auto btn_down = std::make_shared<ButtonGpio>(
+      std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO2), GpioState::kHigh);
+  auto btn_center = std::make_shared<ButtonGpio>(
+      std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO1), GpioState::kHigh);
+  auto btn_right = std::make_shared<ButtonGpio>(
+      std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO0), GpioState::kHigh);
 
   SSD1306 lcd{I2C1, btn_center, nullptr, btn_right, btn_left, btn_up, btn_down};
   lcd.SetFont(SSD1306::Font::k5x7_Tn);
   etl::string<15> msg{"Hello world"};
 
-  etl::vector<std::shared_ptr<GpioOpencm3>, 6> buttons;
+  etl::vector<std::shared_ptr<ButtonGpio>, 6> buttons;
   buttons.push_back(btn_up);
   buttons.push_back(btn_left);
   buttons.push_back(btn_down);
@@ -186,13 +192,13 @@ void task_lcd(void* /*pvParameters*/) {
 
       auto btn_action{Snake::Action::kNone};
       for (auto i = 0; i < 10; i++) {
-        if (btn_up->Get() == GpioState::kHigh) {
+        if (btn_up->IsPressed()) {
           btn_action = Snake::Action::kUp;
-        } else if (btn_down->Get() == GpioState::kHigh) {
+        } else if (btn_down->IsPressed()) {
           btn_action = Snake::Action::kDown;
-        } else if (btn_left->Get() == GpioState::kHigh) {
+        } else if (btn_left->IsPressed()) {
           btn_action = Snake::Action::kLeft;
-        } else if (btn_right->Get() == GpioState::kHigh) {
+        } else if (btn_right->IsPressed()) {
           btn_action = Snake::Action::kRight;
         }
         int wait_ms = 20 - points;
@@ -203,7 +209,7 @@ void task_lcd(void* /*pvParameters*/) {
       snake.ProcessAction(btn_action);
     }
 
-    while (btn_center->Get() != GpioState::kHigh) {
+    while (!btn_center->IsPressed()) {
       vTaskDelay(pdMS_TO_TICKS(50));
     }
 
@@ -224,10 +230,10 @@ void task_lcd(void* /*pvParameters*/) {
 
     lcd.Refresh();
 
-    while (btn_center->Get() != GpioState::kLow) {
+    while (!btn_center->IsPressed()) {
       vTaskDelay(pdMS_TO_TICKS(50));
     }
-    while (btn_center->Get() != GpioState::kHigh) {
+    while (btn_center->IsPressed()) {
       vTaskDelay(pdMS_TO_TICKS(50));
     }
   }

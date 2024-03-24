@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "gpio/gpio_interface.hpp"
+#include "devices/button/button_interface.hpp"
 
 #ifndef NDEBUG
 #include "u8g2.h"
@@ -14,11 +14,12 @@
 class SSD1306 {
  public:
   explicit SSD1306(uint32_t i2c_bus);
-  explicit SSD1306(uint32_t i2c_bus, std::shared_ptr<GpioInterface> menu_select,
-                   std::shared_ptr<GpioInterface> menu_home,
-                   std::shared_ptr<GpioInterface> menu_next,
-                   std::shared_ptr<GpioInterface> menu_prev, std::shared_ptr<GpioInterface> menu_up,
-                   std::shared_ptr<GpioInterface> menu_down);
+  explicit SSD1306(uint32_t i2c_bus, std::shared_ptr<ButtonInterface> menu_select,
+                   std::shared_ptr<ButtonInterface> menu_home,
+                   std::shared_ptr<ButtonInterface> menu_next,
+                   std::shared_ptr<ButtonInterface> menu_prev,
+                   std::shared_ptr<ButtonInterface> menu_up,
+                   std::shared_ptr<ButtonInterface> menu_down);
   ~SSD1306();
 
   enum class Font { k5x7_Tn, k7x14B_Tr };

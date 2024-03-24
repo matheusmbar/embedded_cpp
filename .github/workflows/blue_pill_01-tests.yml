@@ -9,6 +9,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - uses: carlosperate/arm-none-eabi-gcc-action@v1
+      with:
+        release: '10.3-2021.10'
+
     - name: Configure, build tests
       working-directory: ./blue_pill_01
       run: |

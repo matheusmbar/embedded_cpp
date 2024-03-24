@@ -24,7 +24,7 @@ set( FREERTOS_HEAP "4" CACHE STRING "" FORCE)
 # Select the cross-compile PORT
 if (CMAKE_CROSSCOMPILING)
   if (DEFINED DEVICE_FAMILY )
-    message(WARNING "DEVICE_FAMILY is defined as '${DEVICE_FAMILY}'")
+    message(VERBOSE "DEVICE_FAMILY is defined as '${DEVICE_FAMILY}'")
 
     # DEVICE_FAMILY -> PORT match
     if ("${DEVICE_FAMILY}" MATCHES "^(stm32f1)$")
@@ -32,7 +32,7 @@ if (CMAKE_CROSSCOMPILING)
     elseif("${DEVICE_FAMILY}" MATCHES "^(stm32f4)$")
       set(FREERTOS_PORT "GCC_ARM_CM4F" CACHE STRING "" FORCE)
     else()
-      set(FREERTOS_PORT CACHE)
+      unset(FREERTOS_PORT CACHE)
       message(SEND_ERROR " There is no FreeRTOS PORT match for family '${DEVICE_FAMILY}' yet\n"
                          " Update DEVICE_FAMILY -> PORT match on 'freertos_kernel.cmake'")
     endif()

@@ -223,6 +223,9 @@ void task_lcd(void* /*pvParameters*/) {
 
     lcd.Refresh();
 
+    while (btn_center->IsPressed()) {
+      vTaskDelay(pdMS_TO_TICKS(50));
+    }
     while (!btn_center->IsPressed()) {
       vTaskDelay(pdMS_TO_TICKS(50));
     }

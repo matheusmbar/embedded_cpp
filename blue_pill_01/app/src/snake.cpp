@@ -11,9 +11,7 @@ void Snake::Reset() {
   points = 0;
 
   body.clear();
-  const uint8_t tailStartX = 60;
-  const uint8_t tailStartY = 30;
-  const uint8_t startLen = 5;
+
   for (uint8_t i = 0; i < startLen; i++) {
     uint8_t next_x = kStep * i + tailStartX;
     body.push_back(Position(next_x, tailStartY));
@@ -102,17 +100,18 @@ void Snake::CalculateNewHead(Snake::Action action) {
       break;
   }
 
-  if (new_x < kMinX) {
-    new_x = kMaxX;
-  } else if (new_x > kMaxX) {
-    new_x = kMinX;
+  if (new_x < 0) {
+    new_x = kPosX;
+  } else if (new_x > kPosX) {
+    new_x = 0;
   }
 
-  if (new_y < kMinY) {
-    new_y = kMaxY;
-  } else if (new_y > kMaxY) {
-    new_y = kMinY;
+  if (new_y < 0) {
+    new_y = kPosY;
+  } else if (new_y > kPosY) {
+    new_y = 0;
   }
+
   last_action = action;
 
   new_head = Position(static_cast<uint8_t>(new_x), static_cast<uint8_t>(new_y));

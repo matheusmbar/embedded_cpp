@@ -29,10 +29,6 @@ constexpr bool operator!=(const Position& lhs, const Position& rhs) {
 
 class Snake {
  public:
-  static const uint8_t kStep = 6;
-  static const uint8_t kMinX = 1 * kStep;
-  static const uint8_t kMinY = 1 * kStep;
-
   enum class Action { kUp, kDown, kLeft, kRight, kNone };
 
   Snake();
@@ -52,14 +48,16 @@ class Snake {
   int16_t GetPoints() const;
 
  private:
-  static const uint8_t kPosX = 20;
-  static const uint8_t kPosY = 10;
-  static const uint8_t kMaxX = (kPosX - 1) * kStep + kMinX;
-  static const uint8_t kMaxY = (kPosY - 1) * kStep + kMinY;
-  static const uint8_t kTotalPos = kPosX * kPosY;
+  static constexpr uint8_t startLen = 5;
+  static constexpr uint8_t kStep = 1;
+  static constexpr uint8_t kPosX = 20;
+  static constexpr uint8_t kPosY = 10;
+  static constexpr uint8_t tailStartX = 10;
+  static constexpr uint8_t tailStartY = 5;
+  static_assert(tailStartX < kPosX);
+  static_assert(tailStartY < kPosY);
 
-  static_assert((kMaxX - kMinX) % kStep == 0);
-  static_assert((kMaxY - kMinY) % kStep == 0);
+  static constexpr uint8_t kTotalPos = kPosX * kPosY;
 
   etl::vector<Position, Snake::kTotalPos> body;
   Position new_head;

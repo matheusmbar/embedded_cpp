@@ -17,6 +17,7 @@
 
 #include "devices/button/button_gpio.hpp"
 #include "devices/gpio/gpio_opencm3.hpp"
+#include "devices/keypad/keypad_button.hpp"
 #include "devices/lcd/ssd1306.hpp"
 #include "devices/led/led_gpio.hpp"
 #include "peripherals/clock.hpp"
@@ -139,16 +140,12 @@ void task_lcd(void* /*pvParameters*/) {
   auto btn_right = std::make_shared<ButtonGpio>(
       std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO0), GpioState::kHigh);
 
-  SSD1306 lcd{I2C1, btn_center, nullptr, btn_right, btn_left, btn_up, btn_down};
+  std::shared_ptr<KeypadInterface> keypad =
+      std::make_shared<KeypadButton>(btn_up, btn_left, btn_down, btn_center, btn_right);
+
+  SSD1306 lcd{I2C1, keypad};
   lcd.SetFont(SSD1306::Font::k5x7_Tn);
   etl::string<15> msg{"Hello world"};
-
-  etl::vector<std::shared_ptr<ButtonGpio>, 6> buttons;
-  buttons.push_back(btn_up);
-  buttons.push_back(btn_left);
-  buttons.push_back(btn_down);
-  buttons.push_back(btn_center);
-  buttons.push_back(btn_right);
 
   const etl::vector<Position, 4> fruits{Position(4, 3), Position(6, 6), Position(1, 1),
                                         Position(13, 5)};

@@ -9,12 +9,7 @@
 
 struct SSD1306::SSD1306Impl {
   static uint32_t i2c_bus_;
-  static std::shared_ptr<ButtonInterface> menu_select_;
-  static std::shared_ptr<ButtonInterface> menu_home_;
-  static std::shared_ptr<ButtonInterface> menu_next_;
-  static std::shared_ptr<ButtonInterface> menu_prev_;
-  static std::shared_ptr<ButtonInterface> menu_up_;
-  static std::shared_ptr<ButtonInterface> menu_down_;
+  static std::shared_ptr<KeypadInterface> keypad_;
 
   u8g2_t u8g2;
   SSD1306Impl() = default;
@@ -62,22 +57,22 @@ struct SSD1306::SSD1306Impl {
     bool pressed = false;
     switch (msg) {
       case U8X8_MSG_GPIO_MENU_SELECT:
-        pressed = menu_select_->IsPressed();
+        pressed = keypad_->Center();
         break;
       case U8X8_MSG_GPIO_MENU_NEXT:
-        pressed = menu_next_->IsPressed();
+        pressed = keypad_->Right();
         break;
       case U8X8_MSG_GPIO_MENU_PREV:
-        pressed = menu_prev_->IsPressed();
+        pressed = keypad_->Left();
         break;
       case U8X8_MSG_GPIO_MENU_HOME:
-        pressed = menu_home_->IsPressed();
+        pressed = false;
         break;
       case U8X8_MSG_GPIO_MENU_UP:
-        pressed = menu_up_->IsPressed();
+        pressed = keypad_->Up();
         break;
       case U8X8_MSG_GPIO_MENU_DOWN:
-        pressed = menu_down_->IsPressed();
+        pressed = keypad_->Down();
         break;
       default:
         break;
@@ -90,12 +85,7 @@ struct SSD1306::SSD1306Impl {
 };
 
 uint32_t SSD1306::SSD1306Impl::i2c_bus_ = 0;
-std::shared_ptr<ButtonInterface> SSD1306::SSD1306Impl::menu_select_;
-std::shared_ptr<ButtonInterface> SSD1306::SSD1306Impl::menu_home_;
-std::shared_ptr<ButtonInterface> SSD1306::SSD1306Impl::menu_next_;
-std::shared_ptr<ButtonInterface> SSD1306::SSD1306Impl::menu_prev_;
-std::shared_ptr<ButtonInterface> SSD1306::SSD1306Impl::menu_up_;
-std::shared_ptr<ButtonInterface> SSD1306::SSD1306Impl::menu_down_;
+std::shared_ptr<KeypadInterface> SSD1306::SSD1306Impl::keypad_;
 
 SSD1306::SSD1306(uint32_t i2c_bus) : pImpl_(std::make_unique<SSD1306Impl>()) {
   SSD1306Impl::i2c_bus_ = i2c_bus;
@@ -110,20 +100,9 @@ SSD1306::SSD1306(uint32_t i2c_bus) : pImpl_(std::make_unique<SSD1306Impl>()) {
   pImpl_->u8g2.u8x8.debounce_default_pin_state = 0;
 }
 
-SSD1306::SSD1306(uint32_t i2c_bus, std::shared_ptr<ButtonInterface> menu_select,
-                 std::shared_ptr<ButtonInterface> menu_home,
-                 std::shared_ptr<ButtonInterface> menu_next,
-                 std::shared_ptr<ButtonInterface> menu_prev,
-                 std::shared_ptr<ButtonInterface> menu_up,
-                 std::shared_ptr<ButtonInterface> menu_down)
+SSD1306::SSD1306(uint32_t i2c_bus, std::shared_ptr<KeypadInterface> keypad)
     : pImpl_(std::make_unique<SSD1306Impl>()) {
-  SSD1306Impl::menu_select_ = menu_select;
-  SSD1306Impl::menu_home_ = menu_home;
-  SSD1306Impl::menu_next_ = menu_next;
-  SSD1306Impl::menu_prev_ = menu_prev;
-  SSD1306Impl::menu_up_ = menu_up;
-  SSD1306Impl::menu_down_ = menu_down;
-
+  SSD1306Impl::keypad_ = keypad;
   SSD1306Impl::i2c_bus_ = i2c_bus;
 
   u8g2_Setup_ssd1306_i2c_128x64_noname_f(&pImpl_->u8g2, U8G2_R0, SSD1306Impl::u8x8_byte_hw_i2c,

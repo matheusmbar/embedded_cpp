@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "devices/button/button_interface.hpp"
+#include "devices/keypad/keypad_interface.hpp"
 
 #ifndef NDEBUG
 #include "u8g2.h"
@@ -14,12 +14,7 @@
 class SSD1306 {
  public:
   explicit SSD1306(uint32_t i2c_bus);
-  explicit SSD1306(uint32_t i2c_bus, std::shared_ptr<ButtonInterface> menu_select,
-                   std::shared_ptr<ButtonInterface> menu_home,
-                   std::shared_ptr<ButtonInterface> menu_next,
-                   std::shared_ptr<ButtonInterface> menu_prev,
-                   std::shared_ptr<ButtonInterface> menu_up,
-                   std::shared_ptr<ButtonInterface> menu_down);
+  explicit SSD1306(uint32_t i2c_bus, std::shared_ptr<KeypadInterface> keypad);
   ~SSD1306();
 
   enum class Font { k5x7_Tn, k7x14B_Tr };

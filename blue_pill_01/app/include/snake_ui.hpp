@@ -1,14 +1,25 @@
 #pragma once
 
+#include <etl/string.h>
+
+#include <memory>
+
+#include "devices/keypad/keypad_interface.hpp"
 #include "devices/lcd/ssd1306.hpp"
 #include "snake.hpp"
 
 class SnakeUi {
  public:
-  SnakeUi(const Snake& snake, SSD1306& lcd) : snake_(snake), lcd_(lcd) {}
+  SnakeUi(const Snake& snake, SSD1306& lcd, std::shared_ptr<KeypadInterface> keypad)
+      : snake_(snake), lcd_(lcd), keypad_(keypad) {}
 
   void DrawFruit(const Position& fruit);
   void DrawBody();
+  void DrawGame(const Position& fruit, int points);
+  void DrawGameOver(int points, int max_points);
+  void Reset();
+
+  Snake::Action GetAction();
 
  private:
   const Snake& snake_;
@@ -21,6 +32,9 @@ class SnakeUi {
 
   static constexpr uint8_t body_size_{4};
   static constexpr uint8_t body_half_{body_size_ / 2};
+
+  std::shared_ptr<KeypadInterface> keypad_;
+  etl::string<15> msg_{};
 
   Position PosOnGrid(Position pos) const;
 };

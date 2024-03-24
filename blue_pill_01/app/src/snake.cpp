@@ -78,7 +78,7 @@ void Snake::CalculateNewHead(Snake::Action action) {
         action = Action::kLeft;
       }
       break;
-    case Action::kNone:
+    default:
       action = last_action;
       break;
   }

@@ -141,7 +141,7 @@ void task_lcd(void* /*pvParameters*/) {
       std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO0), GpioState::kHigh);
 
   std::shared_ptr<KeypadInterface> keypad =
-      std::make_shared<KeypadButton>(btn_up, btn_left, btn_down, btn_center, btn_right);
+      std::make_shared<KeypadButton>(btn_up, btn_left, btn_down, btn_right, btn_center);
 
   SSD1306 lcd{I2C1, keypad};
   lcd.SetFont(SSD1306::Font::k5x7_Tn);
@@ -154,23 +154,16 @@ void task_lcd(void* /*pvParameters*/) {
 
   for (;;) {
     Snake snake;
-    SnakeUi ui(snake, lcd);
+    SnakeUi ui(snake, lcd, keypad);
 
     auto fruit = fruits.begin();
     int points = 0;
 
     snake.Reset();
-    lcd.ClearDisplay();
+    ui.Reset();
 
     while (!snake.ColisionDetected()) {
-      lcd.ClearBuffer();
-
-      lcd.SetFont(SSD1306::Font::k5x7_Tn);
-      etl::to_string<size_t>(points, msg);
-      lcd.DrawStr(105, 15, msg);
-
-      ui.DrawBody();
-      ui.DrawFruit(*fruit);
+      ui.DrawGame(*fruit, points);
 
       if (snake.ProcessFruit(*fruit)) {
         ++fruit;
@@ -178,18 +171,11 @@ void task_lcd(void* /*pvParameters*/) {
       }
       points = snake.GetPoints();
 
-      lcd.Refresh();
-
       auto btn_action{Snake::Action::kNone};
+
       for (auto i = 0; i < 10; i++) {
-        if (btn_up->IsPressed()) {
-          btn_action = Snake::Action::kUp;
-        } else if (btn_down->IsPressed()) {
-          btn_action = Snake::Action::kDown;
-        } else if (btn_left->IsPressed()) {
-          btn_action = Snake::Action::kLeft;
-        } else if (btn_right->IsPressed()) {
-          btn_action = Snake::Action::kRight;
+        if (auto action = ui.GetAction(); action != Snake::Action::kNone) {
+          btn_action = action;
         }
         int wait_ms = 20 - points;
         wait_ms = wait_ms < 1 ? 1 : wait_ms;
@@ -203,22 +189,10 @@ void task_lcd(void* /*pvParameters*/) {
       vTaskDelay(pdMS_TO_TICKS(50));
     }
 
-    lcd.ClearBuffer();
-    lcd.SetFont(SSD1306::Font::k7x14B_Tr);
-    msg = "GAME OVER";
-    lcd.DrawStr(30, 20, msg);
-    etl::to_string<int>(points, msg);
-    lcd.DrawStr(60, 40, msg);
     if (points > max_points) {
       max_points = points;
-      msg = "New record!";
-    } else {
-      msg = "Record: ";
-      etl::to_string<int>(max_points, msg, true);
     }
-    lcd.DrawStr(28, 60, msg);
-
-    lcd.Refresh();
+    ui.DrawGameOver(points, max_points);
 
     while (btn_center->IsPressed()) {
       vTaskDelay(pdMS_TO_TICKS(50));

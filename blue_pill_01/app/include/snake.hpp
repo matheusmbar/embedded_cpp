@@ -29,7 +29,7 @@ constexpr bool operator!=(const Position& lhs, const Position& rhs) {
 
 class Snake {
  public:
-  enum class Action { kUp, kDown, kLeft, kRight, kNone };
+  enum class Action { kUp, kDown, kLeft, kRight, kEnter, kNone };
 
   Snake();
 
@@ -51,7 +51,7 @@ class Snake {
   static constexpr uint8_t startLen = 5;
   static constexpr uint8_t kStep = 1;
   static constexpr uint8_t kPosX = 20;
-  static constexpr uint8_t kPosY = 10;
+  static constexpr uint8_t kPosY = 9;
   static constexpr uint8_t tailStartX = 10;
   static constexpr uint8_t tailStartY = 5;
   static_assert(tailStartX < kPosX);

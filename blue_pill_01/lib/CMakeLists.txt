@@ -7,6 +7,7 @@ target_sources(project_lib
     ${CMAKE_CURRENT_LIST_DIR}/src/mymath.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/devices/button/button_gpio.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/devices/gpio/gpio_opencm3.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/devices/keypad/keypad_button.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/devices/led/led_gpio.cpp
   )
 

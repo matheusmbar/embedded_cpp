@@ -16,6 +16,7 @@ option(CMAKE_BUILD_TYPE "Choose the type of build." "DEBUG")
 add_executable(${TEST_NAME}
   "${CMAKE_CURRENT_SOURCE_DIR}/src/test1.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/ut_button_gpio.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/ut_keypad_button.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/ut_led_gpio.cpp"
   )
 

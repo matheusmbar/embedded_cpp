@@ -37,6 +37,9 @@ include(cmake/u8g2.cmake)
 
 option(BUILD_LIB_TESTS "Build tests" FALSE)
 
+## Set some compile options for local targets
+add_compile_options(-Wall -Wunused -Werror)
+
 add_subdirectory(lib)
 
 ## Execute final steps

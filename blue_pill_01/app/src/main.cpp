@@ -20,6 +20,7 @@
 #include "devices/keypad/keypad_button.hpp"
 #include "devices/lcd/ssd1306.hpp"
 #include "devices/led/led_gpio.hpp"
+#include "factory.hpp"
 #include "peripherals/clock.hpp"
 #include "peripherals/i2c.hpp"
 #include "peripherals/timer.hpp"
@@ -96,23 +97,23 @@ void etl_log_error(const etl::exception& e) {
 
 void task_blink(void* pvParameters) {
   auto led_commands_queue = static_cast<QueueHandle_t>(pvParameters);
-  LedGpio led(std::make_shared<GpioOpencm3>(GpioFunction::kOutput, led_port, led_pin), true);
+  auto led = MakeLed(MakeGpio(GpioFunction::kOutput, led_port, led_pin), true);
   LedCommand cmd{LedMode::kOff, 0};
   auto ticks = portMAX_DELAY;
   for (;;) {
     ticks = portMAX_DELAY;
     switch (cmd.mode) {
       case LedMode::kOff:
-        led.SetOff();
+        led->SetOff();
         break;
       case LedMode::kOn:
-        led.SetOn();
+        led->SetOn();
         break;
       case LedMode::kToggle:
-        led.Toggle();
+        led->Toggle();
         break;
       case LedMode::kBlink:
-        led.Toggle();
+        led->Toggle();
         ticks = pdMS_TO_TICKS(cmd.period_ms / 2);
         break;
     }
@@ -129,19 +130,17 @@ void task_cli(void* pvParameters) {
 }
 
 void task_lcd(void* /*pvParameters*/) {
-  auto btn_up = std::make_shared<ButtonGpio>(
-      std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO4), GpioState::kHigh);
-  auto btn_left = std::make_shared<ButtonGpio>(
-      std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO3), GpioState::kHigh);
-  auto btn_down = std::make_shared<ButtonGpio>(
-      std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO2), GpioState::kHigh);
-  auto btn_center = std::make_shared<ButtonGpio>(
-      std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO1), GpioState::kHigh);
-  auto btn_right = std::make_shared<ButtonGpio>(
-      std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO0), GpioState::kHigh);
+  auto btn_up = MakeButton(MakeGpio(GpioFunction::kInputPullDown, GPIOA, GPIO4), GpioState::kHigh);
+  auto btn_left =
+      MakeButton(MakeGpio(GpioFunction::kInputPullDown, GPIOA, GPIO3), GpioState::kHigh);
+  auto btn_down =
+      MakeButton(MakeGpio(GpioFunction::kInputPullDown, GPIOA, GPIO2), GpioState::kHigh);
+  auto btn_center =
+      MakeButton(MakeGpio(GpioFunction::kInputPullDown, GPIOA, GPIO1), GpioState::kHigh);
+  auto btn_right =
+      MakeButton(MakeGpio(GpioFunction::kInputPullDown, GPIOA, GPIO0), GpioState::kHigh);
 
-  std::shared_ptr<KeypadInterface> keypad =
-      std::make_shared<KeypadButton>(btn_up, btn_left, btn_down, btn_right, btn_center);
+  auto keypad = MakeKeypad(btn_up, btn_left, btn_down, btn_right, btn_center);
 
   SSD1306 lcd{I2C1, keypad};
   lcd.SetFont(SSD1306::Font::k5x7_Tn);

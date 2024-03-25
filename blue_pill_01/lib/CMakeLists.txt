@@ -4,6 +4,7 @@ add_library(project_lib "")
 
 target_sources(project_lib
   PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/src/factory.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/devices/button/button_gpio.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/devices/gpio/gpio_opencm3.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/devices/keypad/keypad_button.cpp

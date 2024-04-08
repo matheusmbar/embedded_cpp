@@ -19,7 +19,6 @@
 #include "devices/gpio/gpio_opencm3.hpp"
 #include "devices/keypad/keypad_button.hpp"
 #include "devices/lcd/ssd1306.hpp"
-#include "devices/led/led_gpio.hpp"
 #include "factory.hpp"
 #include "peripherals/clock.hpp"
 #include "peripherals/i2c.hpp"
@@ -40,9 +39,6 @@ int local_putchar(char ptr) {
 void writeChar(EmbeddedCli* /* embeddedCli */, char c) {
   local_putchar(c);
 }
-
-constexpr auto led_pin = GPIO13;
-constexpr auto led_port = GPIOC;
 
 namespace Globals {
 uint32_t timer32bits = 0;
@@ -92,32 +88,6 @@ void etl_log_error(const etl::exception& e) {
     embeddedCliPrint(Globals::cli_, error_msg.c_str());
   } else {
     std::printf("%s\r\n", error_msg.c_str());
-  }
-}
-
-void task_blink(void* pvParameters) {
-  auto led_commands_queue = static_cast<QueueHandle_t>(pvParameters);
-  auto led = MakeLed(MakeGpio(GpioFunction::kOutput, led_port, led_pin), true);
-  LedCommand cmd{LedMode::kOff, 0};
-  auto ticks = portMAX_DELAY;
-  for (;;) {
-    ticks = portMAX_DELAY;
-    switch (cmd.mode) {
-      case LedMode::kOff:
-        led->SetOff();
-        break;
-      case LedMode::kOn:
-        led->SetOn();
-        break;
-      case LedMode::kToggle:
-        led->Toggle();
-        break;
-      case LedMode::kBlink:
-        led->Toggle();
-        ticks = pdMS_TO_TICKS(cmd.period_ms / 2);
-        break;
-    }
-    xQueueReceive(led_commands_queue, &cmd, ticks);
   }
 }
 
@@ -205,51 +175,6 @@ void task_lcd(void* /*pvParameters*/) {
   }
 }
 
-void CliLed(EmbeddedCli* cli, char* args, void* context) {
-  auto led_commands_queue = static_cast<QueueHandle_t>(context);
-  LedCommand led_cmd;
-  embeddedCliPrint(cli, "LED");
-  constexpr auto commands = "[on, off, toggle, blink <period_ms>]";
-  const char* arg_1 = embeddedCliGetToken(args, 1);
-  if (arg_1 == nullptr) {
-    embeddedCliPrint(cli, "\tMissing command");
-    embeddedCliPrint(cli, commands);
-    return;
-  }
-
-  const etl::string<7> arg_cmd{arg_1};
-  if (arg_cmd.compare("on") == 0) {
-    embeddedCliPrint(cli, "\ton");
-    led_cmd.mode = LedMode::kOn;
-  } else if (arg_cmd.compare("off") == 0) {
-    embeddedCliPrint(cli, "\toff");
-    led_cmd.mode = LedMode::kOff;
-  } else if (arg_cmd.compare("toggle") == 0) {
-    embeddedCliPrint(cli, "\ttoggle");
-    led_cmd.mode = LedMode::kToggle;
-  } else if (arg_cmd.compare("blink") == 0) {
-    embeddedCliPrint(cli, "\tblink");
-    const char* arg_period = embeddedCliGetToken(args, 2);
-    if (arg_period == nullptr) {
-      embeddedCliPrint(cli, "\tMissing blink period");
-      return;
-    }
-    etl::string<6> period{arg_period};
-    if (auto result = etl::to_arithmetic<uint32_t>(period); result) {
-      led_cmd.mode = LedMode::kBlink;
-      led_cmd.period_ms = result.value();
-    } else {
-      embeddedCliPrint(cli, "\tInvalid blink period");
-      return;
-    }
-  } else {
-    embeddedCliPrint(cli, "\tInvalid command");
-    embeddedCliPrint(cli, commands);
-    return;
-  }
-  xQueueSend(led_commands_queue, &led_cmd, 0);
-}
-
 void CliStats(EmbeddedCli* cli, char* args, void* context) {
   etl::array<char, 200> buffer;
   // this function uses a lot of stack memory (~500 bytes for 3 tasks)
@@ -274,7 +199,6 @@ int main(void) {
 
   ETL_ASSERT(check_inits() == 0, etl::exception("check_inits failed", __FILE__, __LINE__))
 
-  QueueHandle_t led_commands_queue = xQueueCreate(1, sizeof(LedCommand));
   Globals::uart_semaphore = xSemaphoreCreateBinary();
 
   auto config = embeddedCliDefaultConfig();
@@ -283,12 +207,9 @@ int main(void) {
 
   Globals::cli_ = embeddedCliNew(config);
   Globals::cli_->writeChar = writeChar;
-  embeddedCliAddBinding(
-      Globals::cli_, {"led", "Control LED", true, static_cast<void*>(led_commands_queue), CliLed});
+
   embeddedCliAddBinding(Globals::cli_, {"stats", "Get FreeRTOS stats", true, nullptr, CliStats});
 
-  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, static_cast<void*>(led_commands_queue),
-              1, nullptr);
   xTaskCreate(task_cli, "task_cli", 3 * configMINIMAL_STACK_SIZE, static_cast<void*>(Globals::cli_),
               2, nullptr);
 

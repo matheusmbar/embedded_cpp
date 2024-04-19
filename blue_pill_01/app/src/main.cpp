@@ -1,5 +1,9 @@
 #include <FreeRTOS.h>
+
+#define EMBEDDED_CLI_IMPL
+#include <embedded_cli.h>
 #include <etl/algorithm.h>
+#include <etl/delegate.h>
 #include <etl/string.h>
 #include <etl/string_stream.h>
 #include <etl/to_arithmetic.h>
@@ -8,24 +12,20 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/stm32/usart.h>
+#include <projdefs.h>
 #include <queue.h>
 #include <semphr.h>
 #include <task.h>
 
-#define EMBEDDED_CLI_IMPL
-#include <embedded_cli.h>
+#include <memory>
 
-#include "devices/button/button_gpio.hpp"
-#include "devices/gpio/gpio_opencm3.hpp"
-#include "devices/keypad/keypad_button.hpp"
 #include "devices/lcd/ssd1306.hpp"
 #include "factory.hpp"
 #include "peripherals/clock.hpp"
 #include "peripherals/i2c.hpp"
 #include "peripherals/timer.hpp"
 #include "peripherals/usart.hpp"
-#include "snake.hpp"
-#include "snake_ui.hpp"
+#include "snake_game.hpp"
 #include "sys/checks/test_cpp.hpp"
 
 extern "C" {
@@ -99,6 +99,10 @@ void task_cli(void* pvParameters) {
   }
 }
 
+void DelayMs(uint32_t wait_ms) {
+  vTaskDelay(pdMS_TO_TICKS(wait_ms));
+}
+
 void task_lcd(void* /*pvParameters*/) {
   auto btn_up = MakeButton(MakeGpio(GpioFunction::kInputPullDown, GPIOA, GPIO4), GpioState::kHigh);
   auto btn_left =
@@ -112,67 +116,19 @@ void task_lcd(void* /*pvParameters*/) {
 
   auto keypad = MakeKeypad(btn_up, btn_left, btn_down, btn_right, btn_center);
 
+  auto delay_ms = etl::delegate<void(uint32_t)>::create<DelayMs>();
+
   SSD1306 lcd{I2C1, keypad};
-  lcd.SetFont(SSD1306::Font::k5x7_Tn);
-  etl::string<15> msg{"Hello world"};
+  auto snake = std::make_shared<Snake>();
+  auto snake_ui = std::make_unique<SnakeUi>(snake, lcd, keypad);
+  SnakeGame game(snake, std::move(snake_ui), delay_ms);
 
-  const etl::vector<Position, 4> fruits{Position(4, 3), Position(6, 6), Position(1, 1),
-                                        Position(13, 5)};
-
-  int max_points = 0;
+  game.Setup();
 
   for (;;) {
-    Snake snake;
-    SnakeUi ui(snake, lcd, keypad);
-
-    auto fruit = fruits.begin();
-    int points = 0;
-
-    snake.Reset();
-    ui.Reset();
-
-    while (!snake.ColisionDetected()) {
-      ui.DrawGame(*fruit, points);
-
-      if (snake.ProcessFruit(*fruit)) {
-        ++fruit;
-        fruit = fruit == fruits.end() ? fruits.begin() : fruit;
-      }
-      points = snake.GetPoints();
-
-      auto btn_action{Snake::Action::kNone};
-
-      for (auto i = 0; i < 10; i++) {
-        if (auto action = ui.GetAction(); action != Snake::Action::kNone) {
-          btn_action = action;
-        }
-        int wait_ms = 20 - points;
-        wait_ms = wait_ms < 1 ? 1 : wait_ms;
-        vTaskDelay(pdMS_TO_TICKS(wait_ms));
-      }
-
-      snake.ProcessAction(btn_action);
-    }
-
-    while (!btn_center->IsPressed()) {
-      vTaskDelay(pdMS_TO_TICKS(50));
-    }
-
-    if (points > max_points) {
-      max_points = points;
-    }
-    ui.DrawGameOver(points, max_points);
-
-    while (btn_center->IsPressed()) {
-      vTaskDelay(pdMS_TO_TICKS(50));
-    }
-    while (!btn_center->IsPressed()) {
-      vTaskDelay(pdMS_TO_TICKS(50));
-    }
-    while (btn_center->IsPressed()) {
-      vTaskDelay(pdMS_TO_TICKS(50));
-    }
+    game.Run();
   }
+  vTaskDelete(nullptr);
 }
 
 void CliStats(EmbeddedCli* cli, char* args, void* context) {

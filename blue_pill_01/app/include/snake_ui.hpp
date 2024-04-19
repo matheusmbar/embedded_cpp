@@ -10,7 +10,7 @@
 
 class SnakeUi {
  public:
-  SnakeUi(const Snake& snake, SSD1306& lcd, std::shared_ptr<KeypadInterface> keypad)
+  SnakeUi(const std::shared_ptr<Snake> snake, SSD1306& lcd, std::shared_ptr<KeypadInterface> keypad)
       : snake_(snake), lcd_(lcd), keypad_(keypad) {}
 
   void DrawFruit(const Position& fruit);
@@ -22,7 +22,7 @@ class SnakeUi {
   Snake::Action GetAction();
 
  private:
-  const Snake& snake_;
+  const std::shared_ptr<Snake> snake_;
   SSD1306& lcd_;
   static constexpr uint8_t grid_size_{6};
   static constexpr uint8_t grid_half_{grid_size_ / 2};

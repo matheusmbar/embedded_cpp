@@ -16,6 +16,7 @@ target_sources(${APP_NAME}
     "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/snake.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/snake_ui.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/snake_game.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/peripherals/clock.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/peripherals/i2c.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/peripherals/usart.cpp"

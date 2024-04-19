@@ -53,6 +53,14 @@ int16_t Snake::GetPoints() const {
   return points;
 }
 
+Position Snake::GetFruit() {
+  auto fruit = Position(random.range(0, kPosX), random.range(0, kPosY));
+  while (GetHead() == fruit) {
+    fruit = Position(random.range(0, kPosX), random.range(0, kPosY));
+  }
+  return fruit;
+}
+
 void Snake::CalculateNewHead(Snake::Action action) {
   int16_t new_x = GetHead().x();
   int16_t new_y = GetHead().y();

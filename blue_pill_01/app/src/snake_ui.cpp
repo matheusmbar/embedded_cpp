@@ -16,11 +16,11 @@ void SnakeUi::DrawFruit(const Position& fruit) {
 }
 
 void SnakeUi::DrawBody() {
-  for (const auto& section : snake_.GetBody()) {
+  for (const auto& section : snake_->GetBody()) {
     auto pos = PosOnGrid(section);
     lcd_.DrawCircle(pos.x(), pos.y(), body_half_);
   }
-  const auto head = PosOnGrid(snake_.GetHead());
+  const auto head = PosOnGrid(snake_->GetHead());
   lcd_.DrawCircle(head.x(), head.y(), 1);
 }
 

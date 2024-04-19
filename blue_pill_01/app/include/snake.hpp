@@ -1,5 +1,6 @@
 #pragma once
 
+#include <etl/random.h>
 #include <etl/vector.h>
 
 #include <cstdint>
@@ -47,6 +48,8 @@ class Snake {
 
   int16_t GetPoints() const;
 
+  Position GetFruit();
+
  private:
   static constexpr uint8_t startLen = 5;
   static constexpr uint8_t kStep = 1;
@@ -66,6 +69,7 @@ class Snake {
   uint16_t points{0};
   bool self_colision{false};
   bool ate_fruit{false};
+  etl::random_xorshift random;
 
   void CalculateNewHead(Snake::Action action);
 

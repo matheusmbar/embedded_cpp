@@ -1,5 +1,5 @@
-#ifndef LIB_INCLUDE_ETL_PROFILE_H_
-#define LIB_INCLUDE_ETL_PROFILE_H_
+#ifndef APP_INCLUDE_ETL_PROFILE_H_
+#define APP_INCLUDE_ETL_PROFILE_H_
 
 /**
  * @brief Select the features or options in the ETL by defining the appropriate macros
@@ -14,4 +14,4 @@
 #define ETL_IS_DEBUG_BUILD
 #endif
 
-#endif  // LIB_INCLUDE_ETL_PROFILE_H_
+#endif  // APP_INCLUDE_ETL_PROFILE_H_

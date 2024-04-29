@@ -15,7 +15,7 @@ add_library(freertos_config INTERFACE)
 target_include_directories(
   freertos_config
   INTERFACE
-  "${CMAKE_SOURCE_DIR}/lib/include"
+  "${CMAKE_SOURCE_DIR}/app/include"
 )
 
 # Select memory allocation implementation

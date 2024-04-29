@@ -23,6 +23,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON )
 ## Add libopencm3 to project
 include(cmake/libopencm3.cmake)
 
+## Add Lib Stm32 to project
+include(cmake/lib-stm32.cmake)
+
 ## Add ETL CPP to project
 include(cmake/etlcpp.cmake)
 
@@ -40,13 +43,11 @@ option(BUILD_LIB_TESTS "Build tests" FALSE)
 ## Set some compile options for local targets
 add_compile_options(-Wall -Wunused -Werror)
 
-add_subdirectory(lib)
-
 ## Execute final steps
 
 if(NOT BUILD_LIB_TESTS)
   add_subdirectory(app)
 else()
-  enable_testing()
-  add_subdirectory(test)
+  # enable_testing()
+  # add_subdirectory(test)
 endif()

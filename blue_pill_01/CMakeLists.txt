@@ -21,22 +21,22 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON )
 # set(FETCHCONTENT_QUIET FALSE)
 
 ## Add libopencm3 to project
-include(cmake/libopencm3.cmake)
+include(../cmake/libopencm3.cmake)
 
 ## Add Lib Stm32 to project
-include(cmake/lib-stm32.cmake)
+include(../cmake/lib-stm32.cmake)
 
 ## Add ETL CPP to project
-include(cmake/etlcpp.cmake)
+include(../cmake/etlcpp.cmake)
 
 ## Add FreeRTOS to project
-include(cmake/freertos_kernel.cmake)
+include(../cmake/freertos_kernel.cmake)
 
 ## Add embedded-cli to project
-include(cmake/embedded-cli.cmake)
+include(../cmake/embedded-cli.cmake)
 
 ## Add U8G2 to project
-include(cmake/u8g2.cmake)
+include(../cmake/u8g2.cmake)
 
 option(BUILD_LIB_TESTS "Build tests" FALSE)
 

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-include(${PROJECT_SOURCE_DIR}/cmake/gtest.cmake)
+include(${PROJECT_SOURCE_DIR}/../cmake/gtest.cmake)
 
 include(GoogleTest)
 

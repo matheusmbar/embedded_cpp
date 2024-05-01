@@ -36,5 +36,5 @@ class SnakeUi {
   std::shared_ptr<KeypadInterface> keypad_;
   etl::string<15> msg_{};
 
-  Position PosOnGrid(Position pos) const;
+  [[nodiscard]] Position PosOnGrid(Position pos) const;
 };

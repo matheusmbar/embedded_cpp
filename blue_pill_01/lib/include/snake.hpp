@@ -8,11 +8,11 @@
 struct Position {
   explicit Position(uint8_t x = 0, uint8_t y = 0) : x_(x), y_(y) {}
 
-  constexpr uint8_t x() const {
+  [[nodiscard]] constexpr uint8_t x() const {
     return x_;
   }
 
-  constexpr uint8_t y() const {
+  [[nodiscard]] constexpr uint8_t y() const {
     return y_;
   }
 
@@ -40,13 +40,13 @@ class Snake {
 
   void ProcessAction(Snake::Action action);
 
-  bool ColisionDetected() const;
+  [[nodiscard]] bool ColisionDetected() const;
 
-  const Position& GetHead() const;
+  [[nodiscard]] const Position& GetHead() const;
 
-  const etl::ivector<Position>& GetBody() const;
+  [[nodiscard]] const etl::ivector<Position>& GetBody() const;
 
-  int16_t GetPoints() const;
+  [[nodiscard]] int16_t GetPoints() const;
 
   Position GetFruit();
 

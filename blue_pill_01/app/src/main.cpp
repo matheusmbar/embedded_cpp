@@ -25,6 +25,7 @@
 #include "peripherals/i2c.hpp"
 #include "peripherals/timer.hpp"
 #include "peripherals/usart.hpp"
+#include "snake.hpp"
 #include "snake_game.hpp"
 #include "sys/checks/test_cpp.hpp"
 
@@ -140,7 +141,7 @@ void CliStats(EmbeddedCli* cli, char* args, void* context) {
   embeddedCliPrint(cli, buffer.data());
 }
 
-int main(void) {
+int main() {
   static_assert(__cplusplus == 201703);
 
   clock_setup();

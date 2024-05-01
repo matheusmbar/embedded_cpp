@@ -13,7 +13,6 @@ target_sources(${APP_NAME}
   PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src/devices/lcd/ssd1306.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/snake.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/snake_ui.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/snake_game.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/peripherals/clock.cpp"
@@ -31,6 +30,7 @@ target_include_directories(${APP_NAME}
   )
 
 add_dependencies(${APP_NAME}
+  ${PROJECT_NAME}-lib
   myopenstm32
   libopencm3
   libopencm3_ld
@@ -49,6 +49,7 @@ set_target_properties(${APP_NAME}
 ## Link application and libraries
 target_link_libraries(${APP_NAME}
   PUBLIC
+  ${PROJECT_NAME}-lib
   myopenstm32
   libopencm3
   libopencm3_ld

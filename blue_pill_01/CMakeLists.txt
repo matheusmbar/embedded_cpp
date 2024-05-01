@@ -44,10 +44,11 @@ option(BUILD_LIB_TESTS "Build tests" FALSE)
 add_compile_options(-Wall -Wunused -Werror)
 
 ## Execute final steps
+add_subdirectory(lib)
 
 if(NOT BUILD_LIB_TESTS)
   add_subdirectory(app)
 else()
-  # enable_testing()
-  # add_subdirectory(test)
+  enable_testing()
+  add_subdirectory(test)
 endif()

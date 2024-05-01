@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(DEVICE "STM32F103C8TX")
 
 if (NOT DEFINED CMAKE_TOOLCHAIN_FILE AND NOT DEFINED BUILD_LIB_TESTS)
-    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cmake/toolchain-arm-none-eabi.cmake")
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/../cmake/toolchain-arm-none-eabi.cmake")
 endif()
 
 project(blue_pill_01 LANGUAGES C CXX)

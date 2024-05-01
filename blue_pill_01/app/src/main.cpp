@@ -1,31 +1,35 @@
 #include <FreeRTOS.h>
-#include <libopencm3/cm3/nvic.h>
+
+#define EMBEDDED_CLI_IMPL
+#include <embedded_cli.h>
+#include <etl/algorithm.h>
+#include <etl/delegate.h>
+#include <etl/string.h>
+#include <etl/string_stream.h>
+#include <etl/to_arithmetic.h>
+#include <etl/to_string.h>
+#include <etl/vector.h>
 #include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/stm32/usart.h>
+#include <projdefs.h>
 #include <queue.h>
 #include <semphr.h>
 #include <task.h>
 
-#include "devices/gpio/gpio_opencm3.hpp"
-#include "devices/lcd/ssd1306.hpp"
-#include "etl/string.h"
-#include "etl/string_stream.h"
-#include "etl/to_arithmetic.h"
-#include "etl/to_string.h"
-#include "etl/vector.h"
-#include "led/led_gpio.hpp"
-#include "led/led_interface.hpp"
-#include "mymath.hpp"
-#include "peripherals/i2c.hpp"
-#include "test_cpp.hpp"
+#include <memory>
 
-#define EMBEDDED_CLI_IMPL
-#include "embedded_cli.h"
+#include "devices/lcd/ssd1306.hpp"
+#include "factory.hpp"
+#include "peripherals/clock.hpp"
+#include "peripherals/i2c.hpp"
+#include "peripherals/timer.hpp"
+#include "peripherals/usart.hpp"
+#include "snake.hpp"
+#include "snake_game.hpp"
+#include "sys/checks/test_cpp.hpp"
 
 extern "C" {
-#include "test_c.h"
 
 int local_putchar(char ptr) {
   usart_send_blocking(USART1, ptr);
@@ -37,53 +41,14 @@ void writeChar(EmbeddedCli* /* embeddedCli */, char c) {
   local_putchar(c);
 }
 
-Test_CPP test_cpp(1001);
-
-constexpr auto led_pin = GPIO13;
-constexpr auto led_port = GPIOC;
-
 namespace Globals {
 uint32_t timer32bits = 0;
 xSemaphoreHandle uart_semaphore;
 EmbeddedCli* cli_{nullptr};
 }  // namespace Globals
 
-static void clock_setup(void) {
-  /* Select 72 MHz clock*/
-  rcc_clock_setup_pll(&rcc_hse_configs[RCC_CLOCK_HSE8_72MHZ]);
-
-  /* Enable clocks for GPIO port A (for GPIO_USART1_TX) and USART1. */
-  rcc_periph_clock_enable(RCC_GPIOA);
-  rcc_periph_clock_enable(RCC_AFIO);
-  rcc_periph_clock_enable(RCC_USART1);
-}
-
-static void usart_setup(void) {
-  /* Enable the USART1 interrupt. */
-  nvic_enable_irq(NVIC_USART1_IRQ);
-
-  /* Setup GPIO pin GPIO_USART1_RE_TX on GPIO port A for transmit. */
-  gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO_USART1_TX);
-  /* Setup GPIO pin GPIO_USART1_RE_RX on GPIO port A for receive. */
-  gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO_USART1_RX);
-
-  /* Setup UART parameters. */
-  usart_set_baudrate(USART1, 115200);
-  usart_set_databits(USART1, 8);
-  usart_set_stopbits(USART1, USART_STOPBITS_1);
-  usart_set_parity(USART1, USART_PARITY_NONE);
-  usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
-  usart_set_mode(USART1, USART_MODE_TX_RX);
-
-  /* Enable USART1 Receive interrupt. */
-  USART_CR1(USART1) |= USART_CR1_RXNEIE;
-
-  /* Finally enable the USART. */
-  usart_enable(USART1);
-}
-
 extern "C" {
-void USART1_IRQHandler(void) {
+void usart1_isr(void) {
   /* Check if we were called because of RXNE. */
   if (((USART_CR1(USART1) & USART_CR1_RXNEIE) != 0) && ((USART_SR(USART1) & USART_SR_RXNE) != 0)) {
     uint16_t data = usart_recv(USART1);
@@ -99,29 +64,14 @@ void USART1_IRQHandler(void) {
 }
 
 void SetupStatsTimer(void) {
-  /* Enable TIM2 clock. */
-  rcc_periph_clock_enable(RCC_TIM2);
-  /* Enable TIM2 interrupt. */
-  nvic_enable_irq(NVIC_TIM2_IRQ);
-  /* Reset TIM2 peripheral to defaults. */
-  rcc_periph_reset_pulse(RST_TIM2);
-  /* Set the prescaler to have the timer run at 10kHz */
-  timer_set_prescaler(TIM2, (rcc_apb1_frequency / 10000));
-  /* Disable preload, run continuously up to max value */
-  timer_disable_preload(TIM2);
-  timer_continuous_mode(TIM2);
-  timer_set_period(TIM2, 65535);
-  /* Counter enable. */
-  timer_enable_counter(TIM2);
-  /* Enable Channel 1 compare interrupt to increment 32bits count */
-  timer_enable_irq(TIM2, TIM_DIER_CC1IE);
+  timer2_setup();
 }
 
 uint32_t GetStatsTimerCount(void) {
   return Globals::timer32bits + timer_get_counter(TIM2);
 }
 
-void TIM2_IRQHandler(void) {
+void tim2_isr(void) {
   if (timer_get_flag(TIM2, TIM_SR_CC1IF)) {
     /* Clear compare interrupt flag. */
     timer_clear_flag(TIM2, TIM_SR_CC1IF);
@@ -142,32 +92,6 @@ void etl_log_error(const etl::exception& e) {
   }
 }
 
-void task_blink(void* pvParameters) {
-  auto led_commands_queue = static_cast<QueueHandle_t>(pvParameters);
-  LedGpio led(std::make_shared<GpioOpencm3>(GpioFunction::kOutput, led_port, led_pin), true);
-  LedCommand cmd{LedMode::kOff, 0};
-  auto ticks = portMAX_DELAY;
-  for (;;) {
-    ticks = portMAX_DELAY;
-    switch (cmd.mode) {
-      case LedMode::kOff:
-        led.SetOff();
-        break;
-      case LedMode::kOn:
-        led.SetOn();
-        break;
-      case LedMode::kToggle:
-        led.Toggle();
-        break;
-      case LedMode::kBlink:
-        led.Toggle();
-        ticks = pdMS_TO_TICKS(cmd.period_ms / 2);
-        break;
-    }
-    xQueueReceive(led_commands_queue, &cmd, ticks);
-  }
-}
-
 void task_cli(void* pvParameters) {
   auto cli = static_cast<EmbeddedCli*>(pvParameters);
   for (;;) {
@@ -176,121 +100,36 @@ void task_cli(void* pvParameters) {
   }
 }
 
+void DelayMs(uint32_t wait_ms) {
+  vTaskDelay(pdMS_TO_TICKS(wait_ms));
+}
+
 void task_lcd(void* /*pvParameters*/) {
-  auto btn_up = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO4);
-  auto btn_left = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO3);
-  auto btn_down = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO2);
-  auto btn_center = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO1);
-  auto btn_right = std::make_shared<GpioOpencm3>(GpioFunction::kInputPullDown, GPIOA, GPIO0);
+  auto btn_up = MakeButton(MakeGpio(GpioFunction::kInputPullDown, GPIOA, GPIO4), GpioState::kHigh);
+  auto btn_left =
+      MakeButton(MakeGpio(GpioFunction::kInputPullDown, GPIOA, GPIO3), GpioState::kHigh);
+  auto btn_down =
+      MakeButton(MakeGpio(GpioFunction::kInputPullDown, GPIOA, GPIO2), GpioState::kHigh);
+  auto btn_center =
+      MakeButton(MakeGpio(GpioFunction::kInputPullDown, GPIOA, GPIO1), GpioState::kHigh);
+  auto btn_right =
+      MakeButton(MakeGpio(GpioFunction::kInputPullDown, GPIOA, GPIO0), GpioState::kHigh);
 
-  SSD1306 lcd{I2C1, btn_center, nullptr, btn_right, btn_left, btn_up, btn_down};
-  uint8_t count = 0;
-  etl::string<15> msg{"Hello world"};
+  auto keypad = MakeKeypad(btn_up, btn_left, btn_down, btn_right, btn_center);
 
-  etl::vector<std::shared_ptr<GpioOpencm3>, 6> buttons;
-  buttons.push_back(btn_up);
-  buttons.push_back(btn_left);
-  buttons.push_back(btn_down);
-  buttons.push_back(btn_center);
-  buttons.push_back(btn_right);
+  auto delay_ms = etl::delegate<void(uint32_t)>::create<DelayMs>();
+
+  SSD1306 lcd{I2C1, keypad};
+  auto snake = std::make_shared<Snake>();
+  auto snake_ui = std::make_unique<SnakeUi>(snake, lcd, keypad);
+  SnakeGame game(snake, std::move(snake_ui), delay_ms);
+
+  game.Setup();
 
   for (;;) {
-    switch (count) {
-      case 1: {
-        lcd.ClearDisplay();
-        lcd.DrawStr(0, 25, msg);
-
-        uint8_t pos = 50;
-        for (const auto& btn : buttons) {
-          if (btn->Get() == GpioState::kHigh) {
-            lcd.DrawCircle(pos, 55, 2);
-          } else {
-            lcd.DrawCircle(pos, 60, 2);
-          }
-          pos += 4;
-        }
-      } break;
-      case 2:
-        lcd.DrawCircle(112, 45, 13);
-        lcd.DrawBox(0, 40, 10, 10);
-        break;
-      case 3:
-        lcd.DrawLine(0, 27, 127, 63);
-        lcd.DrawLine(0, 63, 127, 27);
-        break;
-      case 4:
-        break;
-      default:
-        count = 0;
-        break;
-    }
-    ++count;
-
-    lcd.Refresh();
-    vTaskDelay(pdMS_TO_TICKS(500));
+    game.Run();
   }
-}
-
-int check_inits() {
-  if (auto check_c = test_c(); check_c) {
-    std::printf("check_c failed [%d]\n", check_c);
-    return check_c;
-  }
-
-  if (1001 != test_cpp.getValue()) {
-    return 1001;
-  }
-
-  if (auto check_cpp = test_cpp.checkGlobals(); check_cpp) {
-    std::printf("check_cpp failed [%d]\n", check_cpp);
-    return check_cpp;
-  }
-  return 0;
-}
-
-void CliLed(EmbeddedCli* cli, char* args, void* context) {
-  auto led_commands_queue = static_cast<QueueHandle_t>(context);
-  LedCommand led_cmd;
-  embeddedCliPrint(cli, "LED");
-  constexpr auto commands = "[on, off, toggle, blink <period_ms>]";
-  const char* arg_1 = embeddedCliGetToken(args, 1);
-  if (arg_1 == nullptr) {
-    embeddedCliPrint(cli, "\tMissing command");
-    embeddedCliPrint(cli, commands);
-    return;
-  }
-
-  const etl::string<7> arg_cmd{arg_1};
-  if (arg_cmd.compare("on") == 0) {
-    embeddedCliPrint(cli, "\ton");
-    led_cmd.mode = LedMode::kOn;
-  } else if (arg_cmd.compare("off") == 0) {
-    embeddedCliPrint(cli, "\toff");
-    led_cmd.mode = LedMode::kOff;
-  } else if (arg_cmd.compare("toggle") == 0) {
-    embeddedCliPrint(cli, "\ttoggle");
-    led_cmd.mode = LedMode::kToggle;
-  } else if (arg_cmd.compare("blink") == 0) {
-    embeddedCliPrint(cli, "\tblink");
-    const char* arg_period = embeddedCliGetToken(args, 2);
-    if (arg_period == nullptr) {
-      embeddedCliPrint(cli, "\tMissing blink period");
-      return;
-    }
-    etl::string<6> period{arg_period};
-    if (auto result = etl::to_arithmetic<uint32_t>(period); result) {
-      led_cmd.mode = LedMode::kBlink;
-      led_cmd.period_ms = result.value();
-    } else {
-      embeddedCliPrint(cli, "\tInvalid blink period");
-      return;
-    }
-  } else {
-    embeddedCliPrint(cli, "\tInvalid command");
-    embeddedCliPrint(cli, commands);
-    return;
-  }
-  xQueueSend(led_commands_queue, &led_cmd, 0);
+  vTaskDelete(nullptr);
 }
 
 void CliStats(EmbeddedCli* cli, char* args, void* context) {
@@ -302,11 +141,11 @@ void CliStats(EmbeddedCli* cli, char* args, void* context) {
   embeddedCliPrint(cli, buffer.data());
 }
 
-int main(void) {
+int main() {
   static_assert(__cplusplus == 201703);
 
   clock_setup();
-  usart_setup();
+  usart1_setup();
   i2c_setup();
 
   std::printf("\r\nBOOTING\r\n");
@@ -317,7 +156,6 @@ int main(void) {
 
   ETL_ASSERT(check_inits() == 0, etl::exception("check_inits failed", __FILE__, __LINE__))
 
-  QueueHandle_t led_commands_queue = xQueueCreate(1, sizeof(LedCommand));
   Globals::uart_semaphore = xSemaphoreCreateBinary();
 
   auto config = embeddedCliDefaultConfig();
@@ -326,12 +164,9 @@ int main(void) {
 
   Globals::cli_ = embeddedCliNew(config);
   Globals::cli_->writeChar = writeChar;
-  embeddedCliAddBinding(
-      Globals::cli_, {"led", "Control LED", true, static_cast<void*>(led_commands_queue), CliLed});
+
   embeddedCliAddBinding(Globals::cli_, {"stats", "Get FreeRTOS stats", true, nullptr, CliStats});
 
-  xTaskCreate(task_blink, "blink", configMINIMAL_STACK_SIZE, static_cast<void*>(led_commands_queue),
-              1, nullptr);
   xTaskCreate(task_cli, "task_cli", 3 * configMINIMAL_STACK_SIZE, static_cast<void*>(Globals::cli_),
               2, nullptr);
 

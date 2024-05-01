@@ -7,11 +7,16 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+
+    - uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
     - uses: carlosperate/arm-none-eabi-gcc-action@v1
       with:
         release: '12.2.Rel1'
+
     - run: |
         arm-none-eabi-gcc --version
         which arm-none-eabi-gcc

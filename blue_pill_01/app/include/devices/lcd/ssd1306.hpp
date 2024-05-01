@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "gpio/gpio_interface.hpp"
+#include "devices/keypad/keypad_interface.hpp"
 
 #ifndef NDEBUG
 #include "u8g2.h"
@@ -14,14 +14,14 @@
 class SSD1306 {
  public:
   explicit SSD1306(uint32_t i2c_bus);
-  explicit SSD1306(uint32_t i2c_bus, std::shared_ptr<GpioInterface> menu_select,
-                   std::shared_ptr<GpioInterface> menu_home,
-                   std::shared_ptr<GpioInterface> menu_next,
-                   std::shared_ptr<GpioInterface> menu_prev, std::shared_ptr<GpioInterface> menu_up,
-                   std::shared_ptr<GpioInterface> menu_down);
+  explicit SSD1306(uint32_t i2c_bus, std::shared_ptr<KeypadInterface> keypad);
   ~SSD1306();
 
+  enum class Font { k5x7_Tn, k7x14B_Tr };
+
   void Refresh();
+
+  void ClearBuffer();
 
   void ClearDisplay();
 
@@ -32,6 +32,8 @@ class SSD1306 {
   void DrawCircle(uint16_t x0, uint16_t y0, uint16_t rad);
 
   uint16_t DrawStr(uint16_t x, uint16_t y, const etl::istring& text);
+
+  void SetFont(Font font);
 
   uint8_t UiMessage(const etl::istring& title_1, const etl::istring& title_2,
                     const etl::istring& title_3, const etl::istring& buttons_list);

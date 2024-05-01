@@ -1,23 +1,34 @@
 cmake_minimum_required(VERSION 3.22)
 
-add_library(project_lib "")
+set(LIB_NAME "${PROJECT_NAME}-lib")
 
-target_sources(project_lib
+add_library(${LIB_NAME} STATIC)
+
+target_sources(
+  ${LIB_NAME}
   PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}/src/mymath.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/led/led_gpio.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/snake.cpp
   )
 
-target_include_directories(project_lib
-  INTERFACE
+target_include_directories(
+  ${LIB_NAME}
+  PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/include
+    ${PROJECT_SOURCE_DIR}/app/include
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   )
 
 add_dependencies(
-  project_lib
-  freertos_kernel
+  ${LIB_NAME}
+  myopenstm32
   etl::etl
   )
 
-target_link_libraries(project_lib PUBLIC etl::etl freertos_kernel)
+target_link_libraries(
+  ${LIB_NAME}
+  PUBLIC
+  myopenstm32
+  etl::etl
+  )

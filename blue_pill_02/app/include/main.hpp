@@ -1,6 +1,3 @@
-#ifndef APP_INCLUDE_MAIN_HPP_
-#define APP_INCLUDE_MAIN_HPP_
+#pragma once
 
 int main(void);
-
-#endif  // APP_INCLUDE_MAIN_HPP_
